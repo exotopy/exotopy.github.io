@@ -109,6 +109,7 @@
 <body>
     <div id="title"></div>
     <div class="container">
+        <!-- Left Panel -->
         <div class="panel" id="leftPanel">
             <div id="pathInputs" class="hidden">
                 <input type="file" accept="image/*" id="cardImage">
@@ -120,12 +121,17 @@
             <textarea id="leftSephirahNotes" class="hidden" placeholder="Enter notes for this Sephirah..."></textarea>
         </div>
 
+        <!-- Center Panel -->
         <div class="panel center-panel">
             <div class="tree-container" id="treeContainer">
-                <svg></svg>
+                <svg>
+                    <!-- Paths will be added here -->
+                </svg>
+                <!-- Sephirot will be added here -->
             </div>
         </div>
 
+        <!-- Right Panel -->
         <div class="panel" id="rightPanel">
             <div id="pathNotes" class="hidden">
                 <label>Notes</label>
@@ -149,27 +155,110 @@
             malkuth: { name: 'Malkuth', x: 50, y: 95 }
         };
 
+        const paths = [
+            { start: 'kether', end: 'binah', card: '1 Magician', labelOffset: { x: -5, y: -2 } },
+            { start: 'kether', end: 'chokhmah', card: '0 Fool', labelOffset: { x: 5, y: -2 } },
+            { start: 'kether', end: 'tiphareth', card: '2 High Priestess', labelOffset: { x: 5, y: 0 } },
+            { start: 'binah', end: 'chokhmah', card: '3 Empress', labelOffset: { x: 0, y: -3 } },
+            { start: 'binah', end: 'tiphareth', card: '5 Hierophant', labelOffset: { x: -5, y: 0 } },
+            { start: 'chokhmah', end: 'tiphareth', card: '17 The Star', labelOffset: { x: 5, y: 0 } },
+            { start: 'chesed', end: 'geburah', card: '11 Strength', labelOffset: { x: 0, y: -3 } },
+            { start: 'chesed', end: 'tiphareth', card: '8 Justice', labelOffset: { x: -3, y: 0 } },
+            { start: 'geburah', end: 'tiphareth', card: '6 Lovers', labelOffset: { x: 3, y: 0 } },
+            { start: 'tiphareth', end: 'netzach', card: '13 Death', labelOffset: { x: -3, y: 0 } },
+            { start: 'tiphareth', end: 'hod', card: '14 Temperance', labelOffset: { x: 3, y: 0 } },
+            { start: 'tiphareth', end: 'yesod', card: '9 Hermit', labelOffset: { x: -3, y: 0 } },
+            { start: 'netzach', end: 'hod', card: '12 Hanged Man', labelOffset: { x: 0, y: -3 } },
+            { start: 'netzach', end: 'yesod', card: '15 Devil', labelOffset: { x: -3, y: 0 } },
+            { start: 'hod', end: 'yesod', card: '10 Wheel', labelOffset: { x: 3, y: 0 } },
+            { start: 'yesod', end: 'malkuth', card: '21 The World', labelOffset: { x: 0, y: 0 } },
+            { start: 'chesed', end: 'binah', card: '7 Chariot', labelOffset: { x: 3, y: -2 } },
+            { start: 'geburah', end: 'chokhmah', card: '4 Emperor', labelOffset: { x: -3, y: -2 } },
+            { start: 'chesed', end: 'netzach', card: '16 Tower', labelOffset: { x: -3, y: 0 } },
+            { start: 'geburah', end: 'hod', card: '5 Hierophant', labelOffset: { x: 3, y: 0 } },
+            { start: 'hod', end: 'malkuth', card: '20 Judgement', labelOffset: { x: 3, y: 0 } },
+            { start: 'netzach', end: 'malkuth', card: '18 Moon', labelOffset: { x: -3, y: 0 } },
+            { start: 'yesod', end: 'malkuth', card: '19 Sun', labelOffset: { x: 0, y: -2 } }
+        ];
+
         function createTree() {
             const container = document.getElementById('treeContainer');
+            const svg = container.querySelector('svg');
+
+            // Create paths using SVG lines
+            paths.forEach(path => {
+                const start = sephirot[path.start];
+                const end = sephirot[path.end];
+                
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', start.x + '%');
+                line.setAttribute('y1', start.y + '%');
+                line.setAttribute('x2', end.x + '%');
+                line.setAttribute('y2', end.y + '%');
+                line.setAttribute('stroke', 'black');
+                line.setAttribute('stroke-width', '2');
+                
+                line.addEventListener('click', () => selectPath(path));
+                
+                svg.appendChild(line);
+
+                // Add path label
+                const label = document.createElement('div');
+                label.className = 'path-label';
+                label.textContent = path.card;
+                label.style.left = `${(start.x + end.x) / 2 + path.labelOffset.x}%`;
+                label.style.top = `${(start.y + end.y) / 2 + path.labelOffset.y}%`;
+                label.addEventListener('click', () => selectPath(path));
+                container.appendChild(label);
+            });
+
+            // Create Sephirot with labels
             Object.entries(sephirot).forEach(([key, data]) => {
                 const group = document.createElement('div');
                 group.className = 'sephirah-group';
                 group.style.left = `${data.x}%`;
                 group.style.top = `${data.y}%`;
+
                 const sephirah = document.createElement('div');
                 sephirah.className = 'sephirah';
                 sephirah.textContent = data.name;
+
                 group.appendChild(sephirah);
                 group.addEventListener('click', () => selectSephirah(key));
+                
                 container.appendChild(group);
             });
         }
 
         function selectSephirah(key) {
             document.getElementById('title').textContent = sephirot[key].name;
+            document.getElementById('pathInputs').classList.add('hidden');
+            document.getElementById('pathNotes').classList.add('hidden');
+            document.getElementById('leftSephirahNotes').classList.remove('hidden');
+            document.getElementById('rightSephirahNotes').classList.remove('hidden');
         }
 
+        function selectPath(path) {
+            document.getElementById('title').textContent = path.card;
+            document.getElementById('pathInputs').classList.remove('hidden');
+            document.getElementById('pathNotes').classList.remove('hidden');
+            document.getElementById('leftSephirahNotes').classList.add('hidden');
+            document.getElementById('rightSephirahNotes').classList.add('hidden');
+        }
+
+        // Initialize
         document.addEventListener('DOMContentLoaded', createTree);
+        
+        // Clear selection when clicking background
+        document.querySelector('.container').addEventListener('click', (e) => {
+            if (e.target.className === 'container' || e.target.className === 'panel') {
+                document.getElementById('title').textContent = '';
+                document.getElementById('pathInputs').classList.add('hidden');
+                document.getElementById('pathNotes').classList.add('hidden');
+                document.getElementById('leftSephirahNotes').classList.add('hidden');
+                document.getElementById('rightSephirahNotes').classList.add('hidden');
+            }
+        });
     </script>
 </body>
 </html>
