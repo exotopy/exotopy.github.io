@@ -2,6 +2,10 @@
 <html>
 <head>
     <title>Tree of Life Tarot Study</title>
+   <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+  import { getFirestore, collection, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+</script>
     <style>
         body {
             margin: 0;
@@ -57,6 +61,7 @@
             text-align: center;
             font-size: 12px;
             padding: 4px;
+            cursor: pointer;
         }
 
         .path-label {
@@ -142,6 +147,22 @@
     </div>
 
     <script>
+        // Initialize Firebase (replace with your config from Firebase console)
+       const firebaseConfig = {
+    apiKey: "AIzaSyBOTt7ZC9BB1xr0qgxt2-u6N_A0zrpXtXo",
+    authDomain: "tarot-notes-ce74f.firebaseapp.com",
+    projectId: "tarot-notes-ce74f",
+    storageBucket: "tarot-notes-ce74f.firebasestorage.app",
+    messagingSenderId: "102510585363",
+    appId: "1:102510585363:web:e14dc1bb94284898f181e6",
+    measurementId: "G-L27KGY14ZC"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+        // Define the sephirot
         const sephirot = {
             kether: { name: 'Kether', x: 50, y: 5 },
             binah: { name: 'Binah', x: 25, y: 20 },
@@ -155,6 +176,7 @@
             malkuth: { name: 'Malkuth', x: 50, y: 95 }
         };
 
+        // Define the paths
         const paths = [
             { start: 'kether', end: 'binah', card: '1 Magician', labelOffset: { x: -5, y: -2 } },
             { start: 'kether', end: 'chokhmah', card: '0 Fool', labelOffset: { x: 5, y: -2 } },
@@ -180,6 +202,10 @@
             { start: 'netzach', end: 'malkuth', card: '18 Moon', labelOffset: { x: -3, y: 0 } },
             { start: 'yesod', end: 'malkuth', card: '19 Sun', labelOffset: { x: 0, y: -2 } }
         ];
+
+        // Store current selections
+        let currentSephirah = null;
+        let currentPath = null;
 
         function createTree() {
             const container = document.getElementById('treeContainer');
@@ -230,25 +256,155 @@
             });
         }
 
-        function selectSephirah(key) {
+        async function selectSephirah(key) {
+            currentSephirah = key;
+            currentPath = null;
+            
             document.getElementById('title').textContent = sephirot[key].name;
             document.getElementById('pathInputs').classList.add('hidden');
             document.getElementById('pathNotes').classList.add('hidden');
             document.getElementById('leftSephirahNotes').classList.remove('hidden');
             document.getElementById('rightSephirahNotes').classList.remove('hidden');
+
+            // Load existing notes from Firebase
+            try {
+                const doc = await db.collection('sephirahNotes').doc(key).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    document.getElementById('leftSephirahNotes').value = data.notes || '';
+                    document.getElementById('rightSephirahNotes').value = data.additionalNotes || '';
+                } else {
+                    document.getElementById('leftSephirahNotes').value = '';
+                    document.getElementById('rightSephirahNotes').value = '';
+                }
+            } catch (error) {
+                console.error('Error loading notes:', error);
+            }
         }
 
-        function selectPath(path) {
+        async function selectPath(path) {
+            currentPath = path;
+            currentSephirah = null;
+            
             document.getElementById('title').textContent = path.card;
             document.getElementById('pathInputs').classList.remove('hidden');
             document.getElementById('pathNotes').classList.remove('hidden');
             document.getElementById('leftSephirahNotes').classList.add('hidden');
             document.getElementById('rightSephirahNotes').classList.add('hidden');
+
+            // Load existing notes from Firebase
+            try {
+                const doc = await db.collection('pathNotes').doc(path.card).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    document.querySelector('#pathNotes textarea').value = data.notes || '';
+                    document.querySelector('#pathInputs input[placeholder="Card Name"]').value = data.cardName || '';
+                    document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = data.hebrewCharacter || '';
+                    document.querySelector('#pathInputs textarea').value = data.correspondences || '';
+                } else {
+                    document.querySelector('#pathNotes textarea').value = '';
+                    document.querySelector('#pathInputs input[placeholder="Card Name"]').value = '';
+                    document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = '';
+                    document.querySelector('#pathInputs textarea').value = '';
+                }
+            } catch (error) {
+                console.error('Error loading notes:', error);
+            }
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', createTree);
-        
+        async function saveSephirahNotes() {
+            if (!currentSephirah) return;
+            
+            const leftNotes = document.getElementById('leftSephirahNotes').value;
+            const rightNotes = document.getElementById('rightSephirahNotes').value;
+            
+            try {
+                await db.collection('sephirahNotes').doc(currentSephirah).set({
+                    notes: leftNotes,
+                    additionalNotes: rightNotes,
+                    lastModified: new Date()
+                });
+            } catch (error) {
+                console.error('Error saving notes:', error);
+                alert('Failed to save notes. Please check your connection.');
+            }
+        }
+
+        async function savePathNotes() {
+            if (!currentPath) return;
+            
+            const notes = document.querySelector('#pathNotes textarea').value;
+            const cardName = document.querySelector('#pathInputs input[placeholder="Card Name"]').value;
+            const hebrewChar = document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value;
+            const correspondences = document.querySelector('#pathInputs textarea').value;
+            
+            try {
+                await db.collection('pathNotes').doc(currentPath.card).set({
+                    notes: notes,
+                    cardName: cardName,
+                    hebrewCharacter: hebrewChar,
+                    correspondences: correspondences,
+                    lastModified: new Date()
+                });
+            } catch (error) {
+                console.error('Error saving notes:', error);
+                alert('Failed to save notes. Please check your connection.');
+            }
+        }
+
+        // Add auto-save functionality
+        function setupAutoSave() {
+            const textareas = document.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                let saveTimeout;
+                textarea.addEventListener('input', () => {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(() => {
+                        if (currentPath) {
+                            savePathNotes();
+                        } else if (currentSephirah) {
+                            saveSephirahNotes();
+                        }
+                    }, 1000); // Save after 1 second of no typing
+                });
+            });
+
+            // Also watch input fields for paths
+            const inputs = document.querySelectorAll('#pathInputs input[type="text"]');
+            inputs.forEach(input => {
+                let saveTimeout;
+                input.addEventListener('input', () => {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(() => {
+                        if (currentPath) {
+                            savePathNotes();
+                        }
+                    }, 1000);
+                });
+            });
+        }
+
+        // Handle file uploads
+        document.getElementById('cardImage').addEventListener('change', async (event) => {
+            if (!currentPath) return;
+            
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        await db.collection('pathNotes').doc(currentPath.card).update({
+                            cardImage: e.target.result
+                        });
+                    } catch (error) {
+                        console.error('Error saving image:', error);
+                        alert('Failed to save image. Please try again.');
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
         // Clear selection when clicking background
         document.querySelector('.container').addEventListener('click', (e) => {
             if (e.target.className === 'container' || e.target.className === 'panel') {
@@ -257,7 +413,15 @@
                 document.getElementById('pathNotes').classList.add('hidden');
                 document.getElementById('leftSephirahNotes').classList.add('hidden');
                 document.getElementById('rightSephirahNotes').classList.add('hidden');
+                currentPath = null;
+                currentSephirah = null;
             }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            createTree();
+            setupAutoSave();
         });
     </script>
 </body>
