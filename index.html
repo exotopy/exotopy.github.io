@@ -163,52 +163,63 @@
             </div>
             <textarea id="rightSephirahNotes" class="hidden" placeholder="Enter additional notes for this Sephirah..."></textarea>
         </div>
+        <!--imagesec-->
+        <div id="pathInputs" class="hidden">
+            <div class="image-container">
+                <img id="cardImageDisplay" class="card-preview" style="display: none; max-width: 200px; margin-bottom: 10px;">
+                <input type="file" accept="image/*" id="cardImage">
+            </div>
+            <input type="text" placeholder="Card Name">
+            <input type="text" placeholder="Hebrew Character">
+            <label>Correspondences</label>
+            <textarea></textarea>
+        </div>
     </div>
 
     <script>
         let currentSephirah = null;
         let currentPath = null;
+        
 
-        // Define the sephirot
-        const sephirot = {
-            kether: { name: 'Kether', x: 50, y: 5 },
-            binah: { name: 'Binah', x: 25, y: 20 },
-            chokhmah: { name: 'Chokhmah', x: 75, y: 20 },
-            chesed: { name: 'Chesed', x: 25, y: 35 },
-            geburah: { name: 'Geburah', x: 75, y: 35 },
-            tiphareth: { name: 'Tiphareth', x: 50, y: 50 },
-            netzach: { name: 'Netzach', x: 25, y: 65 },
-            hod: { name: 'Hod', x: 75, y: 65 },
-            yesod: { name: 'Yesod', x: 50, y: 80 },
-            malkuth: { name: 'Malkuth', x: 50, y: 95 }
-        };
+      // Define the sephirot
+const sephirot = {
+    kether: { name: 'Kether', x: 50, y: 5 },
+    binah: { name: 'Binah', x: 25, y: 20 },
+    chokhmah: { name: 'Chokhmah', x: 75, y: 20 },
+    geburah: { name: 'Geburah', x: 25, y: 35 },  // swapped with chesed
+    chesed: { name: 'Chesed', x: 75, y: 35 },    // swapped with geburah
+    tiphareth: { name: 'Tiphareth', x: 50, y: 50 },
+    hod: { name: 'Hod', x: 25, y: 65 },          // swapped with netzach
+    netzach: { name: 'Netzach', x: 75, y: 65 },  // swapped with hod
+    yesod: { name: 'Yesod', x: 50, y: 80 },
+    malkuth: { name: 'Malkuth', x: 50, y: 95 }
+};
 
         // Define the paths
         const paths = [
-            { start: 'kether', end: 'binah', card: '1 Magician', labelOffset: { x: -5, y: -2 } },
-            { start: 'kether', end: 'chokhmah', card: '0 Fool', labelOffset: { x: 5, y: -2 } },
-            { start: 'kether', end: 'tiphareth', card: '2 High Priestess', labelOffset: { x: 5, y: 0 } },
-            { start: 'binah', end: 'chokhmah', card: '3 Empress', labelOffset: { x: 0, y: -3 } },
-            { start: 'binah', end: 'tiphareth', card: '5 Hierophant', labelOffset: { x: -5, y: 0 } },
-            { start: 'chokhmah', end: 'tiphareth', card: '17 The Star', labelOffset: { x: 5, y: 0 } },
-            { start: 'chesed', end: 'geburah', card: '11 Strength', labelOffset: { x: 0, y: -3 } },
-            { start: 'chesed', end: 'tiphareth', card: '8 Justice', labelOffset: { x: -3, y: 0 } },
-            { start: 'geburah', end: 'tiphareth', card: '6 Lovers', labelOffset: { x: 3, y: 0 } },
-            { start: 'tiphareth', end: 'netzach', card: '13 Death', labelOffset: { x: -3, y: 0 } },
-            { start: 'tiphareth', end: 'hod', card: '14 Temperance', labelOffset: { x: 3, y: 0 } },
-            { start: 'tiphareth', end: 'yesod', card: '9 Hermit', labelOffset: { x: -3, y: 0 } },
-            { start: 'netzach', end: 'hod', card: '12 Hanged Man', labelOffset: { x: 0, y: -3 } },
-            { start: 'netzach', end: 'yesod', card: '15 Devil', labelOffset: { x: -3, y: 0 } },
-            { start: 'hod', end: 'yesod', card: '10 Wheel', labelOffset: { x: 3, y: 0 } },
-            { start: 'yesod', end: 'malkuth', card: '21 The World', labelOffset: { x: 0, y: 0 } },
-            { start: 'chesed', end: 'binah', card: '7 Chariot', labelOffset: { x: 3, y: -2 } },
-            { start: 'geburah', end: 'chokhmah', card: '4 Emperor', labelOffset: { x: -3, y: -2 } },
-            { start: 'chesed', end: 'netzach', card: '16 Tower', labelOffset: { x: -3, y: 0 } },
-            { start: 'geburah', end: 'hod', card: '5 Hierophant', labelOffset: { x: 3, y: 0 } },
-            { start: 'hod', end: 'malkuth', card: '20 Judgement', labelOffset: { x: 3, y: 0 } },
-            { start: 'netzach', end: 'malkuth', card: '18 Moon', labelOffset: { x: -3, y: 0 } },
-            { start: 'yesod', end: 'malkuth', card: '19 Sun', labelOffset: { x: 0, y: -2 } }
-        ];
+    { start: 'kether', end: 'binah', card: '1 Magician', labelOffset: { x: -5, y: -2 } },
+    { start: 'kether', end: 'chokhmah', card: '0 Fool', labelOffset: { x: 5, y: -2 } },
+    { start: 'kether', end: 'tiphareth', card: '2 High Priestess', labelOffset: { x: 0, y: 0 } },
+    { start: 'binah', end: 'chokhmah', card: '3 Empress', labelOffset: { x: 0, y: -3 } },
+    { start: 'binah', end: 'geburah', card: '7 Chariot', labelOffset: { x: -3, y: -2 } },
+    { start: 'binah', end: 'tiphareth', card: '6 Lovers', labelOffset: { x: -15, y: -10 } }, // adjusted position
+    { start: 'chokhmah', end: 'chesed', card: '5 Hierophant', labelOffset: { x: 3, y: -2 } },
+    { start: 'chokhmah', end: 'tiphareth', card: '17 The Star', labelOffset: { x: 5, y: 0 } },
+    { start: 'geburah', end: 'chesed', card: '11 Strength', labelOffset: { x: 0, y: -3 } },
+    { start: 'geburah', end: 'tiphareth', card: '8 Justice', labelOffset: { x: -3, y: 0 } },
+    { start: 'geburah', end: 'hod', card: '12 Hanged Man', labelOffset: { x: -3, y: 0 } }, // added back
+    { start: 'chesed', end: 'tiphareth', card: '9 Hermit', labelOffset: { x: 3, y: 0 } },
+    { start: 'chesed', end: 'netzach', card: '10 Wheel', labelOffset: { x: 3, y: 0 } }, // added back
+    { start: 'tiphareth', end: 'netzach', card: '13 Death', labelOffset: { x: 3, y: 0 } },
+    { start: 'tiphareth', end: 'hod', card: '15 Devil', labelOffset: { x: -3, y: 0 } },
+    { start: 'tiphareth', end: 'yesod', card: '14 Temperance', labelOffset: { x: 0, y: 0 } },
+    { start: 'hod', end: 'netzach', card: '16 The Tower', labelOffset: { x: 0, y: -3 } },
+    { start: 'hod', end: 'yesod', card: '19 The Sun', labelOffset: { x: -3, y: 0 } },
+    { start: 'netzach', end: 'yesod', card: '4 Emperor', labelOffset: { x: 15, y: -10 } }, // adjusted position
+    { start: 'hod', end: 'malkuth', card: '20 Judgement', labelOffset: { x: -3, y: 0 } },
+    { start: 'yesod', end: 'malkuth', card: '21 The World', labelOffset: { x: 0, y: 0 } },
+    { start: 'netzach', end: 'malkuth', card: '18 The Moon', labelOffset: { x: 3, y: 0 } }
+];
 
         function createTree() {
             const container = document.getElementById('treeContainer');
@@ -259,6 +270,25 @@
             });
         }
 
+// Add this to your script section
+document.getElementById('cardImage').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Show preview immediately
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageDisplay = document.getElementById('cardImageDisplay');
+            imageDisplay.src = e.target.result;
+            imageDisplay.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+
+        // If using Firebase, save to storage
+        if (window.firebase) {
+            saveImageToFirebase(file);
+        }
+    }
+});
 
 async function saveSephirahNotes() {
             if (!currentSephirah) return;
@@ -328,6 +358,20 @@ async function saveSephirahNotes() {
                 alert('Failed to save notes. Please check your connection.');
             }
         }
+        async function saveImageToFirebase(file) {
+    try {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const docRef = window.firestore.doc(window.db, 'pathNotes', currentPath.card);
+            await window.firestore.setDoc(docRef, {
+                cardImage: e.target.result
+            }, { merge: true });
+        };
+        reader.readAsDataURL(file);
+    } catch (error) {
+        console.error('Error saving image:', error);
+    }
+}
 
         async function selectPath(path) {
             currentPath = path;
@@ -358,7 +402,14 @@ async function saveSephirahNotes() {
             } catch (error) {
                 console.error('Error loading notes:', error);
             }
-        }
+            const imageDisplay = document.getElementById('cardImageDisplay');
+    if (docSnap.exists() && docSnap.data().cardImage) {
+        imageDisplay.src = docSnap.data().cardImage;
+        imageDisplay.style.display = 'block';
+    } else {
+        imageDisplay.style.display = 'none';
+    }
+}
         
 
         // Initialize
