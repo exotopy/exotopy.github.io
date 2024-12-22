@@ -128,6 +128,17 @@
         .hidden {
             display: none;
         }
+
+        .image-container {
+    margin-bottom: 15px;
+}
+
+.card-preview {
+    display: block;
+    max-width: 200px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+}
     </style>
 </head>
 <body>
@@ -145,23 +156,23 @@
             <textarea id="leftSephirahNotes" class="hidden" placeholder="Enter notes for this Sephirah..."></textarea>
         </div>
 
-        <!-- Center Panel -->
+        <!--center panel-->
         <div class="panel center-panel">
             <div class="tree-container" id="treeContainer">
                 <svg>
-                    <!-- Paths will be added here -->
+                    <!-- paths-->
                 </svg>
-                <!-- Sephirot will be added here -->
+                <!-- sefirot>
             </div>
         </div>
 
-        <!-- Right Panel -->
+        <!--right panel-->
         <div class="panel" id="rightPanel">
             <div id="pathNotes" class="hidden">
                 <label>Notes</label>
-                <textarea placeholder="Enter notes for this path..."></textarea>
+                <textarea placeholder="Enter notes..."></textarea>
             </div>
-            <textarea id="rightSephirahNotes" class="hidden" placeholder="Enter additional notes for this Sephirah..."></textarea>
+            <textarea id="rightSephirahNotes" class="hidden" placeholder="notes..."></textarea>
         </div>
         <!--imagesec-->
         <div id="pathInputs" class="hidden">
@@ -169,8 +180,8 @@
                 <img id="cardImageDisplay" class="card-preview" style="display: none; max-width: 200px; margin-bottom: 10px;">
                 <input type="file" accept="image/*" id="cardImage">
             </div>
-            <input type="text" placeholder="Card Name">
-            <input type="text" placeholder="Hebrew Character">
+            <input type="text" placeholder="tarot card">
+            <input type="text" placeholder="character/number">
             <label>Correspondences</label>
             <textarea></textarea>
         </div>
@@ -181,41 +192,40 @@
         let currentPath = null;
         
 
-      // Define the sephirot
 const sephirot = {
-    kether: { name: 'Kether', x: 50, y: 5 },
+    kether: { name: 'Keter', x: 50, y: 5 },
     binah: { name: 'Binah', x: 25, y: 20 },
     chokhmah: { name: 'Chokhmah', x: 75, y: 20 },
-    geburah: { name: 'Geburah', x: 25, y: 35 },  // swapped with chesed
-    chesed: { name: 'Chesed', x: 75, y: 35 },    // swapped with geburah
+    geburah: { name: 'Geburah', x: 25, y: 35 }, 
+    chesed: { name: 'Chesed', x: 75, y: 35 },   
     tiphareth: { name: 'Tiphareth', x: 50, y: 50 },
-    hod: { name: 'Hod', x: 25, y: 65 },          // swapped with netzach
-    netzach: { name: 'Netzach', x: 75, y: 65 },  // swapped with hod
+    hod: { name: 'Hod', x: 25, y: 65 },          
+    netzach: { name: 'Netzach', x: 75, y: 65 },  
     yesod: { name: 'Yesod', x: 50, y: 80 },
     malkuth: { name: 'Malkuth', x: 50, y: 95 }
 };
 
-        // Define the paths
+        
         const paths = [
     { start: 'kether', end: 'binah', card: '1 Magician', labelOffset: { x: -5, y: -2 } },
     { start: 'kether', end: 'chokhmah', card: '0 Fool', labelOffset: { x: 5, y: -2 } },
     { start: 'kether', end: 'tiphareth', card: '2 High Priestess', labelOffset: { x: 0, y: 0 } },
     { start: 'binah', end: 'chokhmah', card: '3 Empress', labelOffset: { x: 0, y: -3 } },
     { start: 'binah', end: 'geburah', card: '7 Chariot', labelOffset: { x: -3, y: -2 } },
-    { start: 'binah', end: 'tiphareth', card: '6 Lovers', labelOffset: { x: -15, y: -10 } }, // adjusted position
+    { start: 'binah', end: 'tiphareth', card: '6 Lovers', labelOffset: { x: -15, y: -10 } }, 
     { start: 'chokhmah', end: 'chesed', card: '5 Hierophant', labelOffset: { x: 3, y: -2 } },
-    { start: 'chokhmah', end: 'tiphareth', card: '17 The Star', labelOffset: { x: 5, y: 0 } },
+    { start: 'chokhmah', end: 'tiphareth', card: '4 Emperor', labelOffset: { x: 5, y: 0 } },
     { start: 'geburah', end: 'chesed', card: '11 Strength', labelOffset: { x: 0, y: -3 } },
     { start: 'geburah', end: 'tiphareth', card: '8 Justice', labelOffset: { x: -3, y: 0 } },
-    { start: 'geburah', end: 'hod', card: '12 Hanged Man', labelOffset: { x: -3, y: 0 } }, // added back
+    { start: 'geburah', end: 'hod', card: '12 Hanged Man', labelOffset: { x: -3, y: 0 } }, 
     { start: 'chesed', end: 'tiphareth', card: '9 Hermit', labelOffset: { x: 3, y: 0 } },
-    { start: 'chesed', end: 'netzach', card: '10 Wheel', labelOffset: { x: 3, y: 0 } }, // added back
+    { start: 'chesed', end: 'netzach', card: '10 Wheel', labelOffset: { x: 3, y: 0 } }, 
     { start: 'tiphareth', end: 'netzach', card: '13 Death', labelOffset: { x: 3, y: 0 } },
     { start: 'tiphareth', end: 'hod', card: '15 Devil', labelOffset: { x: -3, y: 0 } },
     { start: 'tiphareth', end: 'yesod', card: '14 Temperance', labelOffset: { x: 0, y: 0 } },
     { start: 'hod', end: 'netzach', card: '16 The Tower', labelOffset: { x: 0, y: -3 } },
     { start: 'hod', end: 'yesod', card: '19 The Sun', labelOffset: { x: -3, y: 0 } },
-    { start: 'netzach', end: 'yesod', card: '4 Emperor', labelOffset: { x: 15, y: -10 } }, // adjusted position
+    { start: 'netzach', end: 'yesod', card: '17 The Star', labelOffset: { x: 15, y: -10 } }, 
     { start: 'hod', end: 'malkuth', card: '20 Judgement', labelOffset: { x: -3, y: 0 } },
     { start: 'yesod', end: 'malkuth', card: '21 The World', labelOffset: { x: 0, y: 0 } },
     { start: 'netzach', end: 'malkuth', card: '18 The Moon', labelOffset: { x: 3, y: 0 } }
@@ -225,7 +235,7 @@ const sephirot = {
             const container = document.getElementById('treeContainer');
             const svg = container.querySelector('svg');
 
-            // Create paths using SVG lines
+            // svg line paths
             paths.forEach(path => {
                 const start = sephirot[path.start];
                 const end = sephirot[path.end];
@@ -242,7 +252,7 @@ const sephirot = {
                 
                 svg.appendChild(line);
 
-                // Add path label
+                // path label
                 const label = document.createElement('div');
                 label.className = 'path-label';
                 label.textContent = path.card;
@@ -252,7 +262,7 @@ const sephirot = {
                 container.appendChild(label);
             });
 
-            // Create Sephirot with labels
+            // sefirot w labels
             Object.entries(sephirot).forEach(([key, data]) => {
                 const group = document.createElement('div');
                 group.className = 'sephirah-group';
@@ -270,26 +280,8 @@ const sephirot = {
             });
         }
 
-// Add this to your script section
-document.getElementById('cardImage').addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        // Show preview immediately
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const imageDisplay = document.getElementById('cardImageDisplay');
-            imageDisplay.src = e.target.result;
-            imageDisplay.style.display = 'block';
-        }
-        reader.readAsDataURL(file);
-
-        // If using Firebase, save to storage
-        if (window.firebase) {
-            saveImageToFirebase(file);
-        }
-    }
-});
-
+    
+//firebase
 async function saveSephirahNotes() {
             if (!currentSephirah) return;
             
@@ -358,21 +350,6 @@ async function saveSephirahNotes() {
                 alert('Failed to save notes. Please check your connection.');
             }
         }
-        async function saveImageToFirebase(file) {
-    try {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const docRef = window.firestore.doc(window.db, 'pathNotes', currentPath.card);
-            await window.firestore.setDoc(docRef, {
-                cardImage: e.target.result
-            }, { merge: true });
-        };
-        reader.readAsDataURL(file);
-    } catch (error) {
-        console.error('Error saving image:', error);
-    }
-}
-
         async function selectPath(path) {
             currentPath = path;
             currentSephirah = null;
@@ -412,13 +389,13 @@ async function saveSephirahNotes() {
 }
         
 
-        // Initialize
+        // init
         document.addEventListener('DOMContentLoaded', () => {
             createTree();
             setupAutoSave();
         });
 
-        // Clear selection when clicking background
+        // clear on click background
         document.querySelector('.container').addEventListener('click', (e) => {
             if (e.target.className === 'container' || e.target.className === 'panel') {
                 document.getElementById('title').textContent = '';
@@ -431,7 +408,7 @@ async function saveSephirahNotes() {
             }
         });
 
-        // Add auto-save functionality
+        // autosave
         function setupAutoSave() {
             const textareas = document.querySelectorAll('textarea');
             textareas.forEach(textarea => {
@@ -461,6 +438,40 @@ async function saveSephirahNotes() {
                 });
             });
         }
+
+        document.getElementById('cardImage').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // preview img??????
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageDisplay = document.getElementById('cardImageDisplay');
+            imageDisplay.src = e.target.result;
+            imageDisplay.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+
+        // save to firebase (notworking)
+        if (window.firebase) {
+            saveImageToFirebase(file);
+        }
+    }
+    async function saveImageToFirebase(file) {
+    try {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const docRef = window.firestore.doc(window.db, 'pathNotes', currentPath.card);
+            await window.firestore.setDoc(docRef, {
+                cardImage: e.target.result
+            }, { merge: true });
+        };
+        reader.readAsDataURL(file);
+    } catch (error) {
+        console.error('Error saving image:', error);
+    }
+}
+
+});
     </script>
 </body>
 </html>
