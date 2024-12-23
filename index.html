@@ -323,36 +323,29 @@
         console.log('Document data:', docSnap.data()); // Debug log
         
         if (docSnap.exists()) {
-            const data = docSnap.data();
-            
-            // Load image if it exists
-            const imageDisplay = document.getElementById('cardImageDisplay');
-            console.log('Image data:', data.cardImage); // Debug log
-            
-            if (data.cardImage && data.cardImage.data) {
-                console.log('Setting image source'); // Debug log
-                imageDisplay.src = data.cardImage.data;
-                imageDisplay.style.display = 'block';
-            } else {
-                console.log('No image data found'); // Debug log
-                imageDisplay.style.display = 'none';
-            }
-            
-            // Load other fields
-            document.querySelector('#pathNotes textarea').value = data.notes || '';
-            document.querySelector('#pathInputs input[placeholder="Card Name"]').value = data.cardName || '';
-            document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = data.hebrewCharacter || '';
-            document.querySelector('#pathInputs textarea').value = data.correspondences || '';
-        } else {
-            // Clear everything if no data exists
-            console.log('No document exists'); // Debug log
-            const imageDisplay = document.getElementById('cardImageDisplay');
-            imageDisplay.style.display = 'none';
-            document.querySelector('#pathNotes textarea').value = '';
-            document.querySelector('#pathInputs input[placeholder="Card Name"]').value = '';
-            document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = '';
-            document.querySelector('#pathInputs textarea').value = '';
-        }
+    const data = docSnap.data();
+    
+    // Load image if it exists
+    const imageDisplay = document.getElementById('cardImageDisplay');
+    if (data.cardImage && data.cardImage.data) {
+        imageDisplay.src = data.cardImage.data;
+        imageDisplay.style.display = 'block';
+    } else {
+        imageDisplay.style.display = 'none';
+    }
+    
+    // Load other fields
+    document.querySelector('#pathNotes textarea').value = data.notes || '';
+    document.querySelector('.text-fields input[placeholder="Hebrew Character"]').value = data.hebrewCharacter || '';
+    document.querySelector('.text-fields textarea').value = data.correspondences || '';
+} else {
+    // Clear everything if no data exists
+    const imageDisplay = document.getElementById('cardImageDisplay');
+    imageDisplay.style.display = 'none';
+    document.querySelector('#pathNotes textarea').value = '';
+    document.querySelector('.text-fields input[placeholder="Hebrew Character"]').value = '';
+    document.querySelector('.text-fields textarea').value = '';
+}
     } catch (error) {
         console.error('Error loading notes:', error);
     }
@@ -520,34 +513,34 @@ document.getElementById('cardImage').addEventListener('change', async function(e
 
         // Auto-save setup
         function setupAutoSave() {
-            const textareas = document.querySelectorAll('textarea');
-            textareas.forEach(textarea => {
-                let saveTimeout;
-                textarea.addEventListener('input', () => {
-                    clearTimeout(saveTimeout);
-                    saveTimeout = setTimeout(() => {
-                        if (currentPath) {
-                            savePathNotes();
-                        } else if (currentSephirah) {
-                            saveSephirahNotes();
-                        }
-                    }, 1000);
-                });
-            });
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        let saveTimeout;
+        textarea.addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                if (currentPath) {
+                    savePathNotes();
+                } else if (currentSephirah) {
+                    saveSephirahNotes();
+                }
+            }, 1000);
+        });
+    });
 
-            const inputs = document.querySelectorAll('#pathInputs input[type="text"]');
-            inputs.forEach(input => {
-                let saveTimeout;
-                input.addEventListener('input', () => {
-                    clearTimeout(saveTimeout);
-                    saveTimeout = setTimeout(() => {
-                        if (currentPath) {
-                            savePathNotes();
-                        }
-                    }, 1000);
-                });
-            });
-        }
+    const inputs = document.querySelector('.text-fields').querySelectorAll('input');
+    inputs.forEach(input => {
+        let saveTimeout;
+        input.addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                if (currentPath) {
+                    savePathNotes();
+                }
+            }, 1000);
+        });
+    });
+}
     </script>
 </body>
 </html>
