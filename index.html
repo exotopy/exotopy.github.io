@@ -16,7 +16,6 @@
             messagingSenderId: "102510585363",
             appId: "1:102510585363:web:e14dc1bb94284898f181e6",
             measurementId: "G-L27KGY14ZC"
-
         };
 
         const app = initializeApp(firebaseConfig);
@@ -130,15 +129,16 @@
         }
 
         .image-container {
-    margin-bottom: 15px;
-}
+            margin-bottom: 15px;
+        }
 
-.card-preview {
-    display: block;
-    max-width: 200px;
-    border: 1px solid #ccc;
-    margin-bottom: 10px;
-}
+        .card-preview {
+            max-width: 200px;
+            max-height: 300px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -147,7 +147,10 @@
         <!-- Left Panel -->
         <div class="panel" id="leftPanel">
             <div id="pathInputs" class="hidden">
-                <input type="file" accept="image/*" id="cardImage">
+                <div class="image-container">
+                    <img id="cardImageDisplay" class="card-preview" alt="Card preview">
+                    <input type="file" accept="image/*" id="cardImage">
+                </div>
                 <input type="text" placeholder="Card Name">
                 <input type="text" placeholder="Hebrew Character">
                 <label>Correspondences</label>
@@ -156,86 +159,71 @@
             <textarea id="leftSephirahNotes" class="hidden" placeholder="Enter notes for this Sephirah..."></textarea>
         </div>
 
-        <!--center panel-->
+        <!-- Center Panel -->
         <div class="panel center-panel">
             <div class="tree-container" id="treeContainer">
                 <svg>
-                    <!-- paths-->
+                    <!-- Paths will be added here -->
                 </svg>
-                <!-- sefirot>
+                <!-- Sephirot will be added here -->
             </div>
         </div>
 
-        <!--right panel-->
+        <!-- Right Panel -->
         <div class="panel" id="rightPanel">
             <div id="pathNotes" class="hidden">
                 <label>Notes</label>
                 <textarea placeholder="Enter notes..."></textarea>
             </div>
-            <textarea id="rightSephirahNotes" class="hidden" placeholder="notes..."></textarea>
-        </div>
-        <!--imagesec-->
-        <div id="pathInputs" class="hidden">
-            <div class="image-container">
-                <img id="cardImageDisplay" class="card-preview" style="display: none; max-width: 200px; margin-bottom: 10px;">
-                <input type="file" accept="image/*" id="cardImage">
-            </div>
-            <input type="text" placeholder="tarot card">
-            <input type="text" placeholder="character/number">
-            <label>Correspondences</label>
-            <textarea></textarea>
+            <textarea id="rightSephirahNotes" class="hidden" placeholder="Additional notes..."></textarea>
         </div>
     </div>
-
     <script>
         let currentSephirah = null;
         let currentPath = null;
-        
 
-const sephirot = {
-    kether: { name: 'Keter', x: 50, y: 5 },
-    binah: { name: 'Binah', x: 25, y: 20 },
-    chokhmah: { name: 'Chokhmah', x: 75, y: 20 },
-    geburah: { name: 'Geburah', x: 25, y: 40 }, 
-    chesed: { name: 'Chesed', x: 75, y: 40 },   
-    tiphareth: { name: 'Tiphareth', x: 50, y: 50 },
-    hod: { name: 'Hod', x: 25, y: 65 },          
-    netzach: { name: 'Netzach', x: 75, y: 65 },  
-    yesod: { name: 'Yesod', x: 50, y: 80 },
-    malkuth: { name: 'Malkuth', x: 50, y: 95 }
-};
+        const sephirot = {
+            kether: { name: 'Keter', x: 50, y: 5 },
+            binah: { name: 'Binah', x: 25, y: 20 },
+            chokhmah: { name: 'Chokhmah', x: 75, y: 20 },
+            geburah: { name: 'Geburah', x: 25, y: 40 },
+            chesed: { name: 'Chesed', x: 75, y: 40 },
+            tiphareth: { name: 'Tiphareth', x: 50, y: 50 },
+            hod: { name: 'Hod', x: 25, y: 65 },
+            netzach: { name: 'Netzach', x: 75, y: 65 },
+            yesod: { name: 'Yesod', x: 50, y: 80 },
+            malkuth: { name: 'Malkuth', x: 50, y: 95 }
+        };
 
-        
         const paths = [
-    { start: 'kether', end: 'binah', card: '1 Magician', labelOffset: { x: -5, y: -2 } },
-    { start: 'kether', end: 'chokhmah', card: '0 Fool', labelOffset: { x: 5, y: -2 } },
-    { start: 'kether', end: 'tiphareth', card: '2 High Priestess', labelOffset: { x: 0, y: 0 } },
-    { start: 'binah', end: 'chokhmah', card: '3 Empress', labelOffset: { x: 0, y: -3 } },
-    { start: 'binah', end: 'geburah', card: '7 Chariot', labelOffset: { x: -3, y: -2 } },
-    { start: 'binah', end: 'tiphareth', card: '6 Lovers', labelOffset: { x: -2, y: -2 } }, 
-    { start: 'chokhmah', end: 'chesed', card: '5 Hierophant', labelOffset: { x: 3, y: -2 } },
-    { start: 'chokhmah', end: 'tiphareth', card: '4 Emperor', labelOffset: { x: -3, y: -2 } },
-    { start: 'geburah', end: 'chesed', card: '11 Strength', labelOffset: { x: 0, y: 0 } },
-    { start: 'geburah', end: 'tiphareth', card: '8 Justice', labelOffset: { x: -3, y: 0 } },
-    { start: 'geburah', end: 'hod', card: '12 Hanged Man', labelOffset: { x: -3, y: 0 } }, 
-    { start: 'chesed', end: 'tiphareth', card: '9 Hermit', labelOffset: { x: 3, y: 0 } },
-    { start: 'chesed', end: 'netzach', card: '10 Wheel', labelOffset: { x: 3, y: 0 } }, 
-    { start: 'tiphareth', end: 'netzach', card: '13 Death', labelOffset: { x: 3, y: 0 } },
-    { start: 'tiphareth', end: 'hod', card: '15 Devil', labelOffset: { x: -3, y: 0 } },
-    { start: 'tiphareth', end: 'yesod', card: '14 Temperance', labelOffset: { x: 0, y: -3 } },
-    { start: 'hod', end: 'netzach', card: '16 The Tower', labelOffset: { x: 0, y: 0 } },
-    { start: 'hod', end: 'yesod', card: '19 The Sun', labelOffset: { x: -3, y: 0 } },
-    { start: 'netzach', end: 'yesod', card: '17 The Star', labelOffset: { x: -3, y: 0 } }, 
-    { start: 'hod', end: 'malkuth', card: '20 Judgement', labelOffset: { x: -3, y: 0 } },
-    { start: 'yesod', end: 'malkuth', card: '21 The World', labelOffset: { x: 0, y: 0 } },
-    { start: 'netzach', end: 'malkuth', card: '18 The Moon', labelOffset: { x: 3, y: 0 } }
-];
+            { start: 'kether', end: 'binah', card: '1 Magician', labelOffset: { x: -5, y: -2 } },
+            { start: 'kether', end: 'chokhmah', card: '0 Fool', labelOffset: { x: 5, y: -2 } },
+            { start: 'kether', end: 'tiphareth', card: '2 High Priestess', labelOffset: { x: 0, y: 0 } },
+            { start: 'binah', end: 'chokhmah', card: '3 Empress', labelOffset: { x: 0, y: -3 } },
+            { start: 'binah', end: 'geburah', card: '7 Chariot', labelOffset: { x: -3, y: -2 } },
+            { start: 'binah', end: 'tiphareth', card: '6 Lovers', labelOffset: { x: -15, y: -10 } },
+            { start: 'chokhmah', end: 'chesed', card: '5 Hierophant', labelOffset: { x: 3, y: -2 } },
+            { start: 'chokhmah', end: 'tiphareth', card: '4 Emperor', labelOffset: { x: 15, y: -10 } },
+            { start: 'geburah', end: 'chesed', card: '11 Strength', labelOffset: { x: 0, y: 0 } },
+            { start: 'geburah', end: 'tiphareth', card: '8 Justice', labelOffset: { x: -3, y: 0 } },
+            { start: 'geburah', end: 'hod', card: '12 Hanged Man', labelOffset: { x: -3, y: 0 } },
+            { start: 'chesed', end: 'tiphareth', card: '9 Hermit', labelOffset: { x: 3, y: 0 } },
+            { start: 'chesed', end: 'netzach', card: '10 Wheel', labelOffset: { x: 3, y: 0 } },
+            { start: 'tiphareth', end: 'netzach', card: '13 Death', labelOffset: { x: 3, y: 0 } },
+            { start: 'tiphareth', end: 'hod', card: '15 Devil', labelOffset: { x: -3, y: 0 } },
+            { start: 'tiphareth', end: 'yesod', card: '14 Temperance', labelOffset: { x: 0, y: 0 } },
+            { start: 'hod', end: 'netzach', card: '16 The Tower', labelOffset: { x: 0, y: 0 } },
+            { start: 'hod', end: 'yesod', card: '19 The Sun', labelOffset: { x: -3, y: 0 } },
+            { start: 'netzach', end: 'yesod', card: '17 The Star', labelOffset: { x: 3, y: 0 } },
+            { start: 'hod', end: 'malkuth', card: '20 Judgement', labelOffset: { x: -3, y: 0 } },
+            { start: 'yesod', end: 'malkuth', card: '21 The World', labelOffset: { x: 0, y: 0 } },
+            { start: 'netzach', end: 'malkuth', card: '18 The Moon', labelOffset: { x: 3, y: 0 } }
+        ];
 
         function createTree() {
             const container = document.getElementById('treeContainer');
             const svg = container.querySelector('svg');
 
-            // svg line paths
             paths.forEach(path => {
                 const start = sephirot[path.start];
                 const end = sephirot[path.end];
@@ -249,10 +237,8 @@ const sephirot = {
                 line.setAttribute('stroke-width', '4');
                 
                 line.addEventListener('click', () => selectPath(path));
-                
                 svg.appendChild(line);
 
-                // path label
                 const label = document.createElement('div');
                 label.className = 'path-label';
                 label.textContent = path.card;
@@ -262,7 +248,6 @@ const sephirot = {
                 container.appendChild(label);
             });
 
-            // sefirot w labels
             Object.entries(sephirot).forEach(([key, data]) => {
                 const group = document.createElement('div');
                 group.className = 'sephirah-group';
@@ -275,29 +260,47 @@ const sephirot = {
 
                 group.appendChild(sephirah);
                 group.addEventListener('click', () => selectSephirah(key));
-                
                 container.appendChild(group);
             });
         }
 
-    
-//firebase
-async function saveSephirahNotes() {
-            if (!currentSephirah) return;
+        async function selectPath(path) {
+            currentPath = path;
+            currentSephirah = null;
             
-            const leftNotes = document.getElementById('leftSephirahNotes').value;
-            const rightNotes = document.getElementById('rightSephirahNotes').value;
-            
+            document.getElementById('title').textContent = path.card;
+            document.getElementById('pathInputs').classList.remove('hidden');
+            document.getElementById('pathNotes').classList.remove('hidden');
+            document.getElementById('leftSephirahNotes').classList.add('hidden');
+            document.getElementById('rightSephirahNotes').classList.add('hidden');
+
             try {
-                const docRef = window.firestore.doc(window.db, 'sephirahNotes', currentSephirah);
-                await window.firestore.setDoc(docRef, {
-                    notes: leftNotes,
-                    additionalNotes: rightNotes,
-                    lastModified: new Date()
-                });
+                const docRef = window.firestore.doc(window.db, 'pathNotes', path.card);
+                const docSnap = await window.firestore.getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const imageDisplay = document.getElementById('cardImageDisplay');
+                    if (data.cardImage) {
+                        imageDisplay.src = data.cardImage;
+                        imageDisplay.style.display = 'block';
+                    } else {
+                        imageDisplay.style.display = 'none';
+                    }
+                    
+                    document.querySelector('#pathNotes textarea').value = data.notes || '';
+                    document.querySelector('#pathInputs input[placeholder="Card Name"]').value = data.cardName || '';
+                    document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = data.hebrewCharacter || '';
+                    document.querySelector('#pathInputs textarea').value = data.correspondences || '';
+                } else {
+                    document.getElementById('cardImageDisplay').style.display = 'none';
+                    document.querySelector('#pathNotes textarea').value = '';
+                    document.querySelector('#pathInputs input[placeholder="Card Name"]').value = '';
+                    document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = '';
+                    document.querySelector('#pathInputs textarea').value = '';
+                }
             } catch (error) {
-                console.error('Error saving notes:', error);
-                alert('Failed to save notes. Please check your connection.');
+                console.error('Error loading notes:', error);
             }
         }
 
@@ -317,6 +320,7 @@ async function saveSephirahNotes() {
                 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
+                    document.getElementById('leftSephirahNotes').value = data.notes
                     document.getElementById('leftSephirahNotes').value = data.notes || '';
                     document.getElementById('rightSephirahNotes').value = data.additionalNotes || '';
                 } else {
@@ -325,6 +329,25 @@ async function saveSephirahNotes() {
                 }
             } catch (error) {
                 console.error('Error loading notes:', error);
+            }
+        }
+
+        async function saveSephirahNotes() {
+            if (!currentSephirah) return;
+            
+            const leftNotes = document.getElementById('leftSephirahNotes').value;
+            const rightNotes = document.getElementById('rightSephirahNotes').value;
+            
+            try {
+                const docRef = window.firestore.doc(window.db, 'sephirahNotes', currentSephirah);
+                await window.firestore.setDoc(docRef, {
+                    notes: leftNotes,
+                    additionalNotes: rightNotes,
+                    lastModified: new Date()
+                });
+            } catch (error) {
+                console.error('Error saving notes:', error);
+                alert('Failed to save notes. Please check your connection.');
             }
         }
 
@@ -344,58 +367,42 @@ async function saveSephirahNotes() {
                     hebrewCharacter: hebrewChar,
                     correspondences: correspondences,
                     lastModified: new Date()
-                });
+                }, { merge: true });
             } catch (error) {
                 console.error('Error saving notes:', error);
                 alert('Failed to save notes. Please check your connection.');
             }
         }
-        async function selectPath(path) {
-            currentPath = path;
-            currentSephirah = null;
-            
-            document.getElementById('title').textContent = path.card;
-            document.getElementById('pathInputs').classList.remove('hidden');
-            document.getElementById('pathNotes').classList.remove('hidden');
-            document.getElementById('leftSephirahNotes').classList.add('hidden');
-            document.getElementById('rightSephirahNotes').classList.add('hidden');
 
-            try {
-                const docRef = window.firestore.doc(window.db, 'pathNotes', path.card);
-                const docSnap = await window.firestore.getDoc(docRef);
-                
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    document.querySelector('#pathNotes textarea').value = data.notes || '';
-                    document.querySelector('#pathInputs input[placeholder="Card Name"]').value = data.cardName || '';
-                    document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = data.hebrewCharacter || '';
-                    document.querySelector('#pathInputs textarea').value = data.correspondences || '';
-                } else {
-                    document.querySelector('#pathNotes textarea').value = '';
-                    document.querySelector('#pathInputs input[placeholder="Card Name"]').value = '';
-                    document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = '';
-                    document.querySelector('#pathInputs textarea').value = '';
-                }
-            } catch (error) {
-                console.error('Error loading notes:', error);
+        document.getElementById('cardImage').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (file && currentPath) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const imageDisplay = document.getElementById('cardImageDisplay');
+                    imageDisplay.src = e.target.result;
+                    imageDisplay.style.display = 'block';
+
+                    try {
+                        const docRef = window.firestore.doc(window.db, 'pathNotes', currentPath.card);
+                        await window.firestore.setDoc(docRef, {
+                            cardImage: e.target.result
+                        }, { merge: true });
+                    } catch (error) {
+                        console.error('Error saving image:', error);
+                    }
+                };
+                reader.readAsDataURL(file);
             }
-            const imageDisplay = document.getElementById('cardImageDisplay');
-    if (docSnap.exists() && docSnap.data().cardImage) {
-        imageDisplay.src = docSnap.data().cardImage;
-        imageDisplay.style.display = 'block';
-    } else {
-        imageDisplay.style.display = 'none';
-    }
-}
-        
+        });
 
-        // init
+        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             createTree();
             setupAutoSave();
         });
 
-        // clear on click background
+        // Clear selection when clicking background
         document.querySelector('.container').addEventListener('click', (e) => {
             if (e.target.className === 'container' || e.target.className === 'panel') {
                 document.getElementById('title').textContent = '';
@@ -408,7 +415,7 @@ async function saveSephirahNotes() {
             }
         });
 
-        // autosave
+        // Auto-save setup
         function setupAutoSave() {
             const textareas = document.querySelectorAll('textarea');
             textareas.forEach(textarea => {
@@ -438,40 +445,6 @@ async function saveSephirahNotes() {
                 });
             });
         }
-
-        document.getElementById('cardImage').addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        // preview img??????
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const imageDisplay = document.getElementById('cardImageDisplay');
-            imageDisplay.src = e.target.result;
-            imageDisplay.style.display = 'block';
-        }
-        reader.readAsDataURL(file);
-
-        // save to firebase (notworking)
-        if (window.firebase) {
-            saveImageToFirebase(file);
-        }
-    }
-    async function saveImageToFirebase(file) {
-    try {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const docRef = window.firestore.doc(window.db, 'pathNotes', currentPath.card);
-            await window.firestore.setDoc(docRef, {
-                cardImage: e.target.result
-            }, { merge: true });
-        };
-        reader.readAsDataURL(file);
-    } catch (error) {
-        console.error('Error saving image:', error);
-    }
-}
-
-});
     </script>
 </body>
 </html>
