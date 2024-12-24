@@ -4,8 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog</title>
-    <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js"></script>
+     <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc } 
+            from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBOTt7ZC9BB1xr0qgxt2-u6N_A0zrpXtXo",
+            authDomain: "tarot-notes-ce74f.firebaseapp.com",
+            projectId: "tarot-notes-ce74f",
+            storageBucket: "tarot-notes-ce74f.firebasestorage.app",
+            messagingSenderId: "102510585363",
+            appId: "1:102510585363:web:e14dc1bb94284898f181e6",
+            measurementId: "G-L27KGY14ZC"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+        window.firestore = { doc, getDoc, setDoc, updateDoc, collection };
+    </script>
     <style>
         body {
             font-family: Arial, sans-serif;
