@@ -37,14 +37,18 @@
             const userStatus = document.getElementById('userStatus');
             
             if (isLoggedIn) {
-                uploadForm.style.display = 'block';
-                loginForm.style.display = 'none';
-                userStatus.innerHTML = `Logged in <button onclick="handleSignOut()" class="logout-btn">Sign Out</button>`;
+                if (uploadForm) uploadForm.style.display = 'block';
+                if (loginForm) loginForm.style.display = 'none';
+                if (userStatus) userStatus.innerHTML = `Logged in <button onclick="handleSignOut()" class="logout-btn">Sign Out</button>`;
+                console.log('Logged in, upload form should be visible');
             } else {
-                uploadForm.style.display = 'none';
-                loginForm.style.display = 'block';
-                userStatus.innerHTML = 'Not logged in';
+                if (uploadForm) uploadForm.style.display = 'none';
+                if (loginForm) loginForm.style.display = 'block';
+                if (userStatus) userStatus.innerHTML = 'Not logged in';
+                console.log('Not logged in, upload form should be hidden');
             }
+            console.log('Upload form element:', uploadForm);
+            console.log('Login state:', isLoggedIn);
         };
 
         window.handleLogin = function(event) {
@@ -264,9 +268,29 @@
             <button type="submit">Login</button>
         </form>
         
-        <!-- Upload form remains the same -->
+        <!-- Upload form -->
         <form class="upload-form" onsubmit="handleFileUpload(event)">
-            <!-- ... upload form contents ... -->
+            <div class="form-group">
+                <label>PDF File:</label>
+                <input type="file" accept=".pdf" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Title:</label>
+                <input type="text" name="title" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Author:</label>
+                <input type="text" name="author" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Tags (comma-separated):</label>
+                <input type="text" name="tags" placeholder="philosophy, history, etc">
+            </div>
+            
+            <button type="submit">Upload PDF</button>
         </form>
 
         <!-- New controls for sorting and filtering -->
