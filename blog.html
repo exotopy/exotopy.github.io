@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Blog</title>
+    <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 800px;
+            margin: 30px auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        input, textarea, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .post {
+            border-bottom: 1px solid #ddd;
+            padding: 15px 0;
+        }
+
+        .post-title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .post-body {
+            margin-bottom: 10px;
+        }
+
+        .post-tags {
+            color: #666;
+            font-style: italic;
+        }
+
+        .post-date {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        #search-input {
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="login-container" class="container">
+        <h1>Blog Login</h1>
+        <form id="login-form">
+            <input type="password" id="site-password" placeholder="Enter Site Password" required>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <div id="blog-container" class="container hidden">
+        <h1>My Blog</h1>
+        
+        <div id="post-form-container">
+            <h2>Create New Post</h2>
+            <form id="post-form">
+                <input type="text" id="post-title" placeholder="Post Title" required>
+                <textarea id="post-body" placeholder="Post Content" required></textarea>
+                <input type="text" id="post-tags" placeholder="Tags (comma-separated)">
+                <button type="submit">Publish Post</button>
+            </form>
+        </div>
+
+        <div id="search-container">
+            <input type="text" id="search-input" placeholder="Search posts...">
+        </div>
+
+        <div id="posts-list">
+            <!-- Blog posts will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration (IMPORTANT: Replace with YOUR project's config)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Site-wide password (change this!)
+        const SITE_PASSWORD = 'myblog2024';
+
+        // DOM Elements
+        const loginContainer = document.getElementById('login-container');
+        const blogContainer = document.getElementById('blog-container');
+        const loginForm = document.getElementById('login-form');
+        const postForm = document.getElementById('post-form');
+        const postsList = document.getElementById('posts-list');
+        const searchInput = document.getElementById('search-input');
+
+        // Render Posts Function
+        async function renderPosts() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            
+            try {
+                // Create a base query to get all posts, ordered by date
+                let postsQuery = db.collection('blogPosts').orderBy('date', 'desc');
+                
+                // Clear existing posts
+                postsList.innerHTML = '';
+                
+                // Fetch posts
+                const querySnapshot = await postsQuery.get();
+                
+                // Render posts
+                querySnapshot.forEach(doc => {
+                    const post = doc.data();
+                    
+                    // Filter posts if search term exists
+                    if (searchTerm && !post.searchIndex.some(term => term.includes(searchTerm))) {
+                        return;
+                    }
+                    
+                    const postElement = document.createElement('div');
+                    postElement.classList.add('post');
+                    
+                    const formattedDate = new Date(post.date).toLocaleString();
+                    
+                    postElement.innerHTML = `
+                        <h2 class="post-title">${post.title}</h2>
+                        <p class="post-body">${post.body}</p>
+                        <div class="post-tags">
+                            ${post.tags && post.tags.length > 0 ? 'Tags: ' + post.tags.join(', ') : ''}
+                        </div>
+                        <div class="post-date">Posted on: ${formattedDate}</div>
+                    `;
+                    
+                    postsList.appendChild(postElement);
+                });
+            } catch (error) {
+                console.error('Error fetching posts:', error);
+                alert('Failed to fetch posts. Please check your connection.');
+            }
+        }
+
+        // Login Handler
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const passwordInput = document.getElementById('site-password').value;
+            
+            if (passwordInput === SITE_PASSWORD) {
+                loginContainer.classList.add('hidden');
+                blogContainer.classList.remove('hidden');
+                renderPosts();
+            } else {
+                alert('Incorrect password. Please try again.');
+            }
+        });
+
+        // Post Submission Handler
+        postForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const titleInput = document.getElementById('post-title');
+            const bodyInput = document.getElementById('post-body');
+            const tagsInput = document.getElementById('post-tags');
+            
+            // Create search index for more flexible searching
+            const tags = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            const searchIndex = [
+                ...titleInput.value.toLowerCase().split(' '),
+                ...tags.map(tag => tag.toLowerCase()),
+                ...bodyInput.value.toLowerCase().split(' ')
+            ];
+            
+            const newPost = {
+                title: titleInput.value,
+                body: bodyInput.value,
+                tags: tags,
+                date: new Date().toISOString(),
+                searchIndex: [...new Set(searchIndex)] // Unique search terms
+            };
+            
+            try {
+                // Add post to Firestore
+                await db.collection('blogPosts').add(newPost);
+                
+                // Clear form inputs
+                titleInput.value = '';
+                bodyInput.value = '';
+                tagsInput.value = '';
+                
+                // Render updated posts
+                renderPosts();
+            } catch (error) {
+                console.error('Error saving post:', error);
+                alert('Failed to save post. Please check your connection.');
+            }
+        });
+
+        // Search Handler
+        searchInput.addEventListener('input', renderPosts);
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            searchInput.value = ''; // Clear any previous search
+        });
+    </script>
+</body>
+</html>
