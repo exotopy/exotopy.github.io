@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Blog</title>
+    <title>Blog</title>
     <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js"></script>
     <style>
@@ -167,14 +167,20 @@
             }
         }
 
-        // Login Handler
+           // Login Handler
         loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const passwordInput = document.getElementById('site-password').value;
             
+            console.log('Login attempt:', {
+                inputPassword: passwordInput, 
+                storedPassword: SITE_PASSWORD,
+                match: passwordInput === SITE_PASSWORD
+            });
+            
             if (passwordInput === SITE_PASSWORD) {
-                loginContainer.classList.add('hidden');
-                blogContainer.classList.remove('hidden');
+                loginContainer.style.display = 'none';
+                blogContainer.style.display = 'block';
                 renderPosts();
             } else {
                 alert('Incorrect password. Please try again.');
