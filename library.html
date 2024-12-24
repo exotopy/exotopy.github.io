@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Library - Jesse and Mr White Site</title>
+
+    <script type="module">
+        // Previous Firebase imports remain the same
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy } 
+            from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } 
+            from "https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBOTt7ZC9BB1xr0qgxt2-u6N_A0zrpXtXo",
+            authDomain: "tarot-notes-ce74f.firebaseapp.com",
+            projectId: "tarot-notes-ce74f",
+            storageBucket: "tarot-notes-ce74f.firebasestorage.app",
+            messagingSenderId: "102510585363",
+            appId: "1:102510585363:web:e14dc1bb94284898f181e6",
+            measurementId: "G-L27KGY14ZC"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        const SITE_PASSWORD = 'your_password_here';
+        let allDocuments = []; // Store all documents for client-side sorting
+        let allTags = new Set(); // Store unique tags
+
+        // Previous login functions remain the same
+        window.checkLoginStatus = function() {
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+            const uploadForm = document.querySelector('.upload-form');
+            const loginForm = document.getElementById('loginForm');
+            const userStatus = document.getElementById('userStatus');
+            
+            if (isLoggedIn) {
+                uploadForm.style.display = 'block';
+                loginForm.style.display = 'none';
+                userStatus.innerHTML = `Logged in <button onclick="handleSignOut()" class="logout-btn">Sign Out</button>`;
+            } else {
+                uploadForm.style.display = 'none';
+                loginForm.style.display = 'block';
+                userStatus.innerHTML = 'Not logged in';
+            }
+        };
+
+        window.handleLogin = function(event) {
+            event.preventDefault();
+            const password = document.getElementById('sitePassword').value;
+            if (password === SITE_PASSWORD) {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                document.getElementById('sitePassword').value = '';
+                checkLoginStatus();
+            } else {
+                alert('Incorrect password');
+            }
+        };
+
+        window.handleSignOut = function() {
+            sessionStorage.removeItem('isLoggedIn');
+            checkLoginStatus();
+        };
+
+        // File upload handler remains largely the same
+        window.handleFileUpload = async function(event) {
+            // ... previous upload code ...
+        };
+
+        // New sorting and filtering functions
+        window.sortDocuments = function(criteria) {
+            const sortSelect = document.getElementById('sortSelect');
+            const sortBy = criteria || sortSelect.value;
+            
+            const sortedDocs = [...allDocuments].sort((a, b) => {
+                switch(sortBy) {
+                    case 'titleAsc':
+                        return a.title.localeCompare(b.title);
+                    case 'titleDesc':
+                        return b.title.localeCompare(a.title);
+                    case 'authorAsc':
+                        return a.author.localeCompare(b.author);
+                    case 'authorDesc':
+                        return b.author.localeCompare(a.author);
+                    case 'dateDesc':
+                        return new Date(b.uploadDate) - new Date(a.uploadDate);
+                    case 'dateAsc':
+                        return new Date(a.uploadDate) - new Date(b.uploadDate);
+                    default:
+                        return 0;
+                }
+            });
+
+            displayDocuments(sortedDocs);
+        };
+
+        window.filterByTag = function(tag) {
+            if (tag === 'all') {
+                displayDocuments(allDocuments);
+                return;
+            }
+            
+            const filteredDocs = allDocuments.filter(doc => 
+                doc.tags && doc.tags.includes(tag)
+            );
+            displayDocuments(filteredDocs);
+        };
+
+        function updateTagsList() {
+            const tagsContainer = document.getElementById('tagsContainer');
+            tagsContainer.innerHTML = '<button onclick="filterByTag(\'all\')" class="tag-btn active">All</button>';
+            
+            Array.from(allTags).sort().forEach(tag => {
+                const button = document.createElement('button');
+                button.className = 'tag-btn';
+                button.onclick = () => filterByTag(tag);
+                button.textContent = tag;
+                tagsContainer.appendChild(button);
+            });
+        }
+
+        function displayDocuments(docs) {
+            const documentsList = document.getElementById('documentsList');
+            documentsList.innerHTML = '';
+            
+            docs.forEach((data) => {
+                const docElement = document.createElement('div');
+                docElement.className = 'document-item';
+                docElement.innerHTML = `
+                    <h3>${data.title}</h3>
+                    <p>Author: ${data.author}</p>
+                    <p>Tags: ${data.tags.join(', ')}</p>
+                    <p>Upload Date: ${new Date(data.uploadDate).toLocaleDateString()}</p>
+                    <p>File Size: ${(data.fileSize / 1024 / 1024).toFixed(2)} MB</p>
+                    <a href="${data.fileURL}" target="_blank" class="download-link">Download PDF</a>
+                `;
+                documentsList.appendChild(docElement);
+            });
+        }
+
+        // Modified load documents function
+        window.loadDocuments = async function() {
+            try {
+                const q = query(collection(db, 'pdfs'));
+                const querySnapshot = await getDocs(q);
+                
+                allDocuments = [];
+                allTags = new Set();
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    allDocuments.push(data);
+                    
+                    // Collect all unique tags
+                    if (data.tags) {
+                        data.tags.forEach(tag => allTags.add(tag));
+                    }
+                });
+                
+                // Initial sort by most recent
+                sortDocuments('dateDesc');
+                updateTagsList();
+                
+            } catch (error) {
+                console.error('Error loading documents:', error);
+                document.getElementById('documentsList').innerHTML = 
+                    '<p>Error loading documents. Please try again later.</p>';
+            }
+        };
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDocuments();
+            checkLoginStatus();
+        });
+    </script>
+
+    <style>
+        /* Previous styles remain */
+        /* Additional styles for sorting and filtering */
+        .controls-container {
+            margin: 20px 0;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .sort-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+
+        .tags-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .tag-btn {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            padding: 5px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tag-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .tag-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .view-toggle button {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .view-toggle button.active {
+            background: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDF Library</h1>
+        
+        <div id="userStatus">Not logged in</div>
+
+        <!-- Login form remains the same -->
+        <form id="loginForm" class="login-section" onsubmit="handleLogin(event)">
+            <h2>Site Login</h2>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="sitePassword" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        
+        <!-- Upload form remains the same -->
+        <form class="upload-form" onsubmit="handleFileUpload(event)">
+            <!-- ... upload form contents ... -->
+        </form>
+
+        <!-- New controls for sorting and filtering -->
+        <div class="controls-container">
+            <div class="sort-container">
+                <label>Sort by:</label>
+                <select id="sortSelect" onchange="sortDocuments()">
+                    <option value="dateDesc">Newest First</option>
+                    <option value="dateAsc">Oldest First</option>
+                    <option value="titleAsc">Title (A-Z)</option>
+                    <option value="titleDesc">Title (Z-A)</option>
+                    <option value="authorAsc">Author (A-Z)</option>
+                    <option value="authorDesc">Author (Z-A)</option>
+                </select>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search documents..." oninput="filterDocuments()">
+            </div>
+        </div>
+
+        <!-- Tags filter -->
+        <div id="tagsContainer" class="tags-container">
+            <!-- Tags will be dynamically added here -->
+        </div>
+
+        <div id="documentsList">
+            <!-- Documents will be loaded here -->
+        </div>
+    </div>
+</body>
+</html>
