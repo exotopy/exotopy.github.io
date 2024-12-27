@@ -305,16 +305,136 @@
         }
 
         async function selectPath(path) {
-    currentPath = path;
-    currentSephirah = null;
-    
-    console.log('Selected path:', path.card); // Debug log
+            currentPath = path;
+            currentSephirah = null;
+            
+            document.getElementById('title').textContent = path.card;
+            document.getElementById('pathInputs').classList.remove('hidden');
+            document.getElementById('pathNotes').classList.remove('hidden');
+            document.getElementById('leftSephirahNotes').classList.add('hidden');
+            document.getElementById('rightSephirahNotes').classList.add('hidden');
 
-    document.getElementById('title').textContent = path.card;
-    document.getElementById('pathInputs').classList.remove('hidden');
-    document.getElementById('pathNotes').classList.remove('hidden');
-    document.getElementById('leftSephirahNotes').classList.add('hidden');
-    document.getElementById('rightSephirahNotes').classList.add('hidden');
+            try {
+                const docRef = window.firestore.doc(window.db, 'pathNotes', path.card);
+                const docSnap = await window.firestore.getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const imageDisplay = document.getElementById('cardImageDisplay');
+                    if (data.cardImage) {
+                        imageDisplay.src = data.cardImage;
+                        imageDisplay.style.display = 'block';
+                    } else {
+                        imageDisplay.style.display = 'none';
+                    }
+                    
+                    document.querySelector('#pathNotes textarea').value = data.notes || '';
+                    document.querySelector('#pathInputs input[placeholder="Card Name"]').value = data.cardName || '';
+                    document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = data.hebrewCharacter || '';
+                    document.querySelector('#pathInputs textarea').value = data.correspondences || '';
+                } else {
+                    document.getElementById('cardImageDisplay').style.display = 'none';
+                    document.querySelector('#pathNotes textarea').value = '';
+                    document.querySelector('#pathInputs input[placeholder="Card Name"]').value = '';
+                    document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = '';
+                    document.querySelector('#pathInputs textarea').value = '';
+                }
+            } catch (error) {
+                console.error('Error loading notes:', error);
+            }
+        }
+
+        async function selectSephirah(key) {
+            currentSephirah = key;
+            currentPath = null;
+            
+            document.getElementById('title').textContent = sephirot[key].name;
+            document.getElementById('pathInputs').classList.add('hidden');
+            document.getElementById('pathNotes').classList.add('hidden');
+            document.getElementById('leftSephirahNotes').classList.remove('hidden');
+            document.getElementById('rightSephirahNotes').classList.remove('hidden');
+
+            try {
+                const docRef = window.firestore.doc(window.db, 'sephirahNotes', key);
+                const docSnap = await window.firestore.getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('leftSephirahNotes').value = data.notes
+                    document.getElementById('leftSephirahNotes').value = data.notes || '';
+                    document.getElementById('rightSephirahNotes').value = data.additionalNotes || '';
+                } else {
+                    document.getElementById('leftSephirahNotes').value = '';
+                    document.getElementById('rightSephirahNotes').value = '';
+                }
+            } catch (error) {
+                console.error('Error loading notes:', error);
+            }
+        }
+
+        async function saveSephirahNotes() {
+            if (!currentSephirah) return;
+            
+            const leftNotes = document.getElementById('leftSephirahNotes').value;
+            const rightNotes = document.getElementById('rightSephirahNotes').value;
+            
+            try {
+                const docRef = window.firestore.doc(window.db, 'sephirahNotes', currentSephirah);
+                await window.firestore.setDoc(docRef, {
+                    notes: leftNotes,
+                    additionalNotes: rightNotes,
+                    lastModified: new Date()
+                });
+            } catch (error) {
+                console.error('Error saving notes:', error);
+                alert('Failed to save notes. Please check your connection.');
+            }
+        }
+
+        async function savePathNotes() {
+            if (!currentPath) return;
+            
+            const notes = document.querySelector('#pathNotes textarea').value;
+            const cardName = document.querySelector('#pathInputs input[placeholder="Card Name"]').value;
+            const hebrewChar = document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value;
+            const correspondences = document.querySelector('#pathInputs textarea').value;
+            
+            try {
+                const docRef = window.firestore.doc(window.db, 'pathNotes', currentPath.card);
+                await window.firestore.setDoc(docRef, {
+                    notes: notes,
+                    cardName: cardName,
+                    hebrewCharacter: hebrewChar,
+                    correspondences: correspondences,
+                    lastModified: new Date()
+                }, { merge: true });
+            } catch (error) {
+                console.error('Error saving notes:', error);
+                alert('Failed to save notes. Please check your connection.');
+            }
+        }
+
+        document.getElementById('cardImage').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (file && currentPath) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const imageDisplay = document.getElementById('cardImageDisplay');
+                    imageDisplay.src = e.target.result;
+                    imageDisplay.style.display = 'block';
+
+                    try {
+                        const docRef = window.firestore.doc(window.db, 'pathNotes', currentPath.card);
+                        await window.firestore.setDoc(docRef, {
+                            cardImage: e.target.result
+                        }, { merge: true });
+                    } catch (error) {
+                        console.error('Error saving image:', error);
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
     try {
         const docRef = window.firestore.doc(window.db, 'pathNotes', path.card);
@@ -512,35 +632,35 @@ document.getElementById('cardImage').addEventListener('change', async function(e
 });
 
         // Auto-save setup
-        function setupAutoSave() {
-    const textareas = document.querySelectorAll('textarea');
-    textareas.forEach(textarea => {
-        let saveTimeout;
-        textarea.addEventListener('input', () => {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                if (currentPath) {
-                    savePathNotes();
-                } else if (currentSephirah) {
-                    saveSephirahNotes();
-                }
-            }, 1000);
-        });
-    });
+         function setupAutoSave() {
+            const textareas = document.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                let saveTimeout;
+                textarea.addEventListener('input', () => {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(() => {
+                        if (currentPath) {
+                            savePathNotes();
+                        } else if (currentSephirah) {
+                            saveSephirahNotes();
+                        }
+                    }, 1000);
+                });
+            });
 
-    const inputs = document.querySelector('.text-fields').querySelectorAll('input');
-    inputs.forEach(input => {
-        let saveTimeout;
-        input.addEventListener('input', () => {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                if (currentPath) {
-                    savePathNotes();
-                }
-            }, 1000);
-        });
-    });
-}
+   const inputs = document.querySelectorAll('#pathInputs input[type="text"]');
+            inputs.forEach(input => {
+                let saveTimeout;
+                input.addEventListener('input', () => {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(() => {
+                        if (currentPath) {
+                            savePathNotes();
+                        }
+                    }, 1000);
+                });
+            });
+        }
     </script>
 </body>
 </html>
