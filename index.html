@@ -115,7 +115,7 @@
 
         textarea {
             height: 200px;
-            resize: ;
+            resize: vertical;
         }
 
         label {
@@ -209,16 +209,16 @@
         let currentPath = null;
 
         const sephirot = {
-            kether: { name: 'Keter', x: 50, y: 5},
-            binah: { name: 'Binah', x: 25, y: 18,  color: 'rgb(0, 0, 0)' },
-            chokhmah: { name: 'Chokhmah', x: 75, y: 18, color: 'rgb(0, 28, 164)' },
-            geburah: { name: 'Geburah', x: 25, y: 36, color: 'rgb(177, 42, 49)' },
-            chesed: { name: 'Chesed', x: 75, y: 36, color: 'rgb(0, 163, 220)'},
-            tiphareth: { name: 'Tiphareth', x: 50, y: 47.5, color: 'rgb(0, 144, 7)' },
-            hod: { name: 'Hod', x: 25, y: 58, color: 'rgb(254, 129, 0)' },
-            netzach: { name: 'Netzach', x: 75, y: 58, color: 'rgb(149, 0, 164)' },
-            yesod: { name: 'Yesod', x: 50, y: 70, color: 'rgb(73, 26, 78)' },
-            malkuth: { name: 'Malkuth', x: 50, y: 90, color: 'rgb(0, 0, 0)' }
+            kether: { name: 'Keter', x: 50, y: 5 },
+            binah: { name: 'Binah', x: 25, y: 20 },
+            chokhmah: { name: 'Chokhmah', x: 75, y: 20 },
+            geburah: { name: 'Geburah', x: 25, y: 40 },
+            chesed: { name: 'Chesed', x: 75, y: 40 },
+            tiphareth: { name: 'Tiphareth', x: 50, y: 50 },
+            hod: { name: 'Hod', x: 25, y: 65 },
+            netzach: { name: 'Netzach', x: 75, y: 65 },
+            yesod: { name: 'Yesod', x: 50, y: 80 },
+            malkuth: { name: 'Malkuth', x: 50, y: 95 }
         };
 
         const paths = [
@@ -283,11 +283,6 @@
                 const sephirah = document.createElement('div');
                 sephirah.className = 'sephirah';
                 sephirah.textContent = data.name;
-                sephirah.style.backgroundColor = data.color;
-// Add contrasting text color for readability
-if (data.color === 'black' || data.color === 'purple') {
-    sephirah.style.color = 'white';
-}
 
                 group.appendChild(sephirah);
                 group.addEventListener('click', () => selectSephirah(key));
