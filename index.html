@@ -283,6 +283,11 @@
                 const sephirah = document.createElement('div');
                 sephirah.className = 'sephirah';
                 sephirah.textContent = data.name;
+                sephirah.style.backgroundColor = data.color;
+// Add contrasting text color for readability
+if (data.color === 'black' || data.color === 'purple') {
+    sephirah.style.color = 'white';
+}
 
                 group.appendChild(sephirah);
                 group.addEventListener('click', () => selectSephirah(key));
