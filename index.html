@@ -308,8 +308,8 @@
     const data = docSnap.data();
     
     // Load image if it exists
-    const imageDisplay = document.getElementById('cardImageDisplay');
-    if (data.cardImage && data.cardImage.data) {
+    const imageDisplay = document.getElementById('ageDisplay');
+    if (data.age && data.cardImage.data) {
         imageDisplay.src = data.cardImage.data;
         imageDisplay.style.display = 'block';
     } else {
@@ -403,65 +403,124 @@
         }
 
         document.getElementById('cardImage').addEventListener('change', async function(event) {
-    const file = event.target.files[0];
-    if (!file || !currentPath) return;
+    const files = event.target.files;
+    if (!files.length || !currentPath) return;
 
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        try {
-            const imageDisplay = document.getElementById('cardImageDisplay');
-            // Convert to smaller image before saving
-            const img = new Image();
-            img.onload = async () => {
-                const canvas = document.createElement('canvas');
-                // Scale down the image to a maximum dimension of 800px
-                let width = img.width;
-                let height = img.height;
-                const maxDimension = 800;
-                
-                if (width > maxDimension || height > maxDimension) {
-                    if (width > height) {
-                        height = (height / width) * maxDimension;
-                        width = maxDimension;
-                    } else {
-                        width = (width / height) * maxDimension;
-                        height = maxDimension;
-                    }
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                // Convert to lower quality JPEG
-                const compressedData = canvas.toDataURL('image/jpeg', 0.6);
-
-                const imageData = {
-                    data: compressedData,
-                    name: file.name,
-                    type: 'image/jpeg',
-                    lastModified: new Date().toISOString()
-                };
-
-                // Save to Firebase
-                const docRef = window.firestore.doc(window.db, 'pathNotes', currentPath.card);
-                await window.firestore.setDoc(docRef, {
-                    cardImage: imageData
-                }, { merge: true });
-
-                // Update display
-                imageDisplay.src = compressedData;
-                imageDisplay.style.display = 'block';
-            };
-            img.src = e.target.result;
-            
-        } catch (error) {
-            console.error('Error saving image:', error);
-            alert('Failed to save image: ' + error.message);
+    try {
+        const docRef = window.firestore.doc(window.db, 'pathNotes', currentPath.card);
+        const docSnap = await window.firestore.getDoc(docRef);
+        let existingImages = [];
+        
+        if (docSnap.exists() && docSnap.data().images) {
+            existingImages = docSnap.data().images;
         }
-    };
-    reader.readAsDataURL(file);
+
+        for (let file of files) {
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const img = new Image();
+                    img.onload = async () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const maxDimension = 800;
+                        
+                        if (width > maxDimension || height > maxDimension) {
+                            if (width > height) {
+                                height = (height / width) * maxDimension;
+                                width = maxDimension;
+                            } else {
+                                width = (width / height) * maxDimension;
+                                height = maxDimension;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        const compressedData = canvas.toDataURL('image/jpeg', 0.6);
+
+                        const imageData = {
+                            data: compressedData,
+                            name: file.name,
+                            type: 'image/jpeg',
+                            lastModified: new Date().toISOString()
+                        };
+
+                        existingImages.push(imageData);
+
+                        await window.firestore.setDoc(docRef, {
+                            images: existingImages
+                        }, { merge: true });
+
+                        updateGallery(existingImages);
+                    };
+                    img.src = e.target.result;
+                } catch (error) {
+                    console.error('Error processing image:', error);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    } catch (error) {
+        console.error('Error saving images:', error);
+        alert('Failed to save images: ' + error.message);
+    }
+});
+
+let currentImageIndex = 0;
+
+function updateGallery(images) {
+    const imageDisplay = document.getElementById('cardImageDisplay');
+    const counter = document.querySelector('.image-counter');
+    const prevBtn = document.querySelector('.gallery-btn.prev');
+    const nextBtn = document.querySelector('.gallery-btn.next');
+
+    if (!images || !images.length) {
+        imageDisplay.style.display = 'none';
+        counter.style.display = 'none';
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        return;
+    }
+
+    imageDisplay.src = images[currentImageIndex].data;
+    imageDisplay.style.display = 'block';
+    counter.textContent = `${currentImageIndex + 1} / ${images.length}`;
+    counter.style.display = 'block';
+    
+    prevBtn.disabled = currentImageIndex === 0;
+    nextBtn.disabled = currentImageIndex === images.length - 1;
+}
+
+// Add event listeners for gallery navigation
+document.querySelector('.gallery-btn.prev').addEventListener('click', () => {
+    const docRef = window.firestore.doc(window.db, 'pathNotes', currentPath.card);
+    window.firestore.getDoc(docRef).then(docSnap => {
+        if (docSnap.exists() && docSnap.data().images) {
+            const images = docSnap.data().images;
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                updateGallery(images);
+            }
+        }
+    });
+});
+
+document.querySelector('.gallery-btn.next').addEventListener('click', () => {
+    const docRef = window.firestore.doc(window.db, 'pathNotes', currentPath.card);
+    window.firestore.getDoc(docRef).then(docSnap => {
+        if (docSnap.exists() && docSnap.data().images) {
+            const images = docSnap.data().images;
+            if (currentImageIndex < images.length - 1) {
+                currentImageIndex++;
+                updateGallery(images);
+            }
+        }
+    });
 });
 
         // Initialize
