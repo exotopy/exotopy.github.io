@@ -203,11 +203,18 @@
         <div class="panel" id="leftPanel">
             <div id="pathInputs" class="hidden">
                 <div class="card-field">
-                    <label>Card Image</label>
+                    <label>Card Images</label>
                     <div class="image-container">
-                        <img id="cardImageDisplay" class="card-preview" alt="Card Image">
+                        <div class="gallery-controls">
+                            <button type="button" class="gallery-btn prev">←</button>
+                            <div class="gallery-display">
+                                <img id="cardImageDisplay" class="card-preview" alt="Card Image">
+                                <div class="image-counter">1 / 1</div>
+                            </div>
+                            <button type="button" class="gallery-btn next">→</button>
+                        </div>
                         <div class="upload-area">
-                            <input type="file" accept="image/*" id="cardImage">
+                            <input type="file" accept="image/*" id="cardImage" multiple>
                         </div>
                     </div>
                 </div>
@@ -342,18 +349,33 @@
     const data = docSnap.data();
     
     // Load image if it exists
-    const imageDisplay = document.getElementById('ageDisplay');
-    if (data.age && data.cardImage.data) {
-        imageDisplay.src = data.cardImage.data;
+    const imageDisplay = document.getElementById('cardImageDisplay');
+    const prevBtn = document.querySelector('.gallery-btn.prev');
+    const nextBtn = document.querySelector('.gallery-btn.next');
+    const counter = document.querySelector('.image-counter');
+
+    if (data.images && data.images.length) {
+        currentImageIndex = 0; // Reset to first image
+        imageDisplay.src = data.images[currentImageIndex].data;
         imageDisplay.style.display = 'block';
+        counter.textContent = `1 / ${data.images.length}`;
+        counter.style.display = 'block';
+        
+        // Enable/disable navigation buttons
+        prevBtn.disabled = true; // First image, so disable prev
+        nextBtn.disabled = data.images.length === 1; // Disable next if only one image
     } else {
         imageDisplay.style.display = 'none';
+        counter.style.display = 'none';
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
     }
-                    
-                    document.querySelector('#pathNotes textarea').value = data.notes || '';
-                    document.querySelector('#pathInputs input[placeholder="Card Name"]').value = data.cardName || '';
-                    document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = data.hebrewCharacter || '';
-                    document.querySelector('#pathInputs textarea').value = data.correspondences || '';
+
+    // Load other fields
+    document.querySelector('#pathNotes textarea').value = data.notes || '';
+    document.querySelector('#pathInputs input[placeholder="Card Name"]').value = data.cardName || '';
+    document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = data.hebrewCharacter || '';
+    document.querySelector('#pathInputs textarea').value = data.correspondences || '';
                 } else {
                     document.getElementById('cardImageDisplay').style.display = 'none';
                     document.querySelector('#pathNotes textarea').value = '';
@@ -382,18 +404,6 @@
                 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                     // Load images if they exist
-    currentImageIndex = 0; // Reset image index when selecting a new path
-    if (data.images && data.images.length) {
-        updateGallery(data.images);
-    } else {
-        const imageDisplay = document.getElementById('cardImageDisplay');
-        const counter = document.querySelector('.image-counter');
-        imageDisplay.style.display = 'none';
-        counter.style.display = 'none';
-        document.querySelector('.gallery-btn.prev').disabled = true;
-        document.querySelector('.gallery-btn.next').disabled = true;
-    }
                     document.getElementById('leftSephirahNotes').value = data.notes
                     document.getElementById('leftSephirahNotes').value = data.notes || '';
                     document.getElementById('rightSephirahNotes').value = data.additionalNotes || '';
@@ -424,29 +434,33 @@
                 alert('Failed to save notes. Please check your connection.');
             }
         }
-
         async function savePathNotes() {
-            if (!currentPath) return;
-            
-            const notes = document.querySelector('#pathNotes textarea').value;
-            const cardName = document.querySelector('#pathInputs input[placeholder="Card Name"]').value;
-            const hebrewChar = document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value;
-            const correspondences = document.querySelector('#pathInputs textarea').value;
-            
-            try {
-                const docRef = window.firestore.doc(window.db, 'pathNotes', currentPath.card);
-                await window.firestore.setDoc(docRef, {
-                    notes: notes,
-                    cardName: cardName,
-                    hebrewCharacter: hebrewChar,
-                    correspondences: correspondences,
-                    lastModified: new Date()
-                }, { merge: true });
-            } catch (error) {
-                console.error('Error saving notes:', error);
-                alert('Failed to save notes. Please check your connection.');
-            }
+    if (!currentPath) return;
+    
+    try {
+        const docRef = window.firestore.doc(window.db, 'pathNotes', currentPath.card);
+        const docSnap = await window.firestore.getDoc(docRef);
+        
+        const newData = {
+            notes: document.querySelector('#pathNotes textarea').value,
+            cardName: document.querySelector('#pathInputs input[placeholder="Card Name"]').value,
+            hebrewCharacter: document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value,
+            correspondences: document.querySelector('#pathInputs textarea').value,
+            lastModified: new Date()
+        };
+
+        // Preserve existing images if they exist
+        if (docSnap.exists() && docSnap.data().images) {
+            newData.images = docSnap.data().images;
         }
+
+        await window.firestore.setDoc(docRef, newData);
+    } catch (error) {
+        console.error('Error saving notes:', error);
+        alert('Failed to save notes. Please check your connection.');
+    }
+}
+
 
         document.getElementById('cardImage').addEventListener('change', async function(event) {
     const files = event.target.files;
