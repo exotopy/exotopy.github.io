@@ -115,7 +115,7 @@
 
         textarea {
             height: 200px;
-            resize: none;
+            resize: ;
         }
 
         label {
@@ -209,35 +209,35 @@
         let currentPath = null;
 
         const sephirot = {
-            kether: { name: 'Keter', x: 50, y: 5 },
-            binah: { name: 'Binah', x: 25, y: 20 },
-            chokhmah: { name: 'Chokhmah', x: 75, y: 20 },
-            geburah: { name: 'Geburah', x: 25, y: 40 },
-            chesed: { name: 'Chesed', x: 75, y: 40 },
-            tiphareth: { name: 'Tiphareth', x: 50, y: 50 },
-            hod: { name: 'Hod', x: 25, y: 65 },
-            netzach: { name: 'Netzach', x: 75, y: 65 },
-            yesod: { name: 'Yesod', x: 50, y: 80 },
-            malkuth: { name: 'Malkuth', x: 50, y: 95 }
+            kether: { name: 'Keter', x: 50, y: 5},
+            binah: { name: 'Binah', x: 25, y: 18,  color: 'rgb(0, 0, 0)' },
+            chokhmah: { name: 'Chokhmah', x: 75, y: 18, color: 'rgb(0, 28, 164)' },
+            geburah: { name: 'Geburah', x: 25, y: 36, color: 'rgb(177, 42, 49)' },
+            chesed: { name: 'Chesed', x: 75, y: 36, color: 'rgb(0, 163, 220)'},
+            tiphareth: { name: 'Tiphareth', x: 50, y: 47.5, color: 'rgb(0, 144, 7)' },
+            hod: { name: 'Hod', x: 25, y: 58, color: 'rgb(254, 129, 0)' },
+            netzach: { name: 'Netzach', x: 75, y: 58, color: 'rgb(149, 0, 164)' },
+            yesod: { name: 'Yesod', x: 50, y: 70, color: 'rgb(73, 26, 78)' },
+            malkuth: { name: 'Malkuth', x: 50, y: 90, color: 'rgb(0, 0, 0)' }
         };
 
         const paths = [
-            { start: 'kether', end: 'binah', card: '1 Magician', labelOffset: { x: -5, y: -2 } },
-            { start: 'kether', end: 'chokhmah', card: '0 Fool', labelOffset: { x: 5, y: -2 } },
-            { start: 'kether', end: 'tiphareth', card: '2 High Priestess', labelOffset: { x: 0, y: 0 } },
-            { start: 'binah', end: 'chokhmah', card: '3 Empress', labelOffset: { x: 0, y: -3 } },
-            { start: 'binah', end: 'geburah', card: '7 Chariot', labelOffset: { x: -3, y: -2 } },
-            { start: 'binah', end: 'tiphareth', card: '6 Lovers', labelOffset: { x: -15, y: -10 } },
-            { start: 'chokhmah', end: 'chesed', card: '5 Hierophant', labelOffset: { x: 3, y: -2 } },
-            { start: 'chokhmah', end: 'tiphareth', card: '4 Emperor', labelOffset: { x: 15, y: -10 } },
+            { start: 'kether', end: 'binah', card: '1 The Magician', labelOffset: { x: -3, y: -1 } },
+            { start: 'kether', end: 'chokhmah', card: '0 The Fool', labelOffset: { x: 3, y: -1 } },
+            { start: 'kether', end: 'tiphareth', card: '2 The High Priestess', labelOffset: { x: 0, y: -2 } },
+            { start: 'binah', end: 'chokhmah', card: '3 The Empress', labelOffset: { x: 0, y: 0 } },
+            { start: 'binah', end: 'geburah', card: '7 The Chariot', labelOffset: { x: -3, y: -1 } },
+            { start: 'binah', end: 'tiphareth', card: '6 The Lovers', labelOffset: { x: -1, y: -1 } },
+            { start: 'chokhmah', end: 'chesed', card: '5 The Hierophant', labelOffset: { x: 3, y: -1 } },
+            { start: 'chokhmah', end: 'tiphareth', card: '4 Emperor', labelOffset: { x: 2, y: -1 } },
             { start: 'geburah', end: 'chesed', card: '11 Strength', labelOffset: { x: 0, y: 0 } },
             { start: 'geburah', end: 'tiphareth', card: '8 Justice', labelOffset: { x: -3, y: 0 } },
-            { start: 'geburah', end: 'hod', card: '12 Hanged Man', labelOffset: { x: -3, y: 0 } },
-            { start: 'chesed', end: 'tiphareth', card: '9 Hermit', labelOffset: { x: 3, y: 0 } },
-            { start: 'chesed', end: 'netzach', card: '10 Wheel', labelOffset: { x: 3, y: 0 } },
+            { start: 'geburah', end: 'hod', card: '12 The Hanged Man', labelOffset: { x: -3, y: 0 } },
+            { start: 'chesed', end: 'tiphareth', card: '9 The Hermit', labelOffset: { x: 3, y: 0 } },
+            { start: 'chesed', end: 'netzach', card: '10 The Wheel of Fortune', labelOffset: { x: 3, y: 0 } },
             { start: 'tiphareth', end: 'netzach', card: '13 Death', labelOffset: { x: 3, y: 0 } },
             { start: 'tiphareth', end: 'hod', card: '15 Devil', labelOffset: { x: -3, y: 0 } },
-            { start: 'tiphareth', end: 'yesod', card: '14 Temperance', labelOffset: { x: 0, y: 0 } },
+            { start: 'tiphareth', end: 'yesod', card: '14 Temperance', labelOffset: { x: 0, y: 4 } },
             { start: 'hod', end: 'netzach', card: '16 The Tower', labelOffset: { x: 0, y: 0 } },
             { start: 'hod', end: 'yesod', card: '19 The Sun', labelOffset: { x: -3, y: 0 } },
             { start: 'netzach', end: 'yesod', card: '17 The Star', labelOffset: { x: 3, y: 0 } },
