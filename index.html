@@ -160,6 +160,40 @@
     background: #f5f5f5;
     display: none;
 }
+        .gallery-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.gallery-btn {
+    padding: 5px 10px;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.gallery-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.gallery-display {
+    position: relative;
+}
+
+.image-counter {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+}
     </style>
 </head>
 <body>
@@ -348,6 +382,18 @@
                 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
+                     // Load images if they exist
+    currentImageIndex = 0; // Reset image index when selecting a new path
+    if (data.images && data.images.length) {
+        updateGallery(data.images);
+    } else {
+        const imageDisplay = document.getElementById('cardImageDisplay');
+        const counter = document.querySelector('.image-counter');
+        imageDisplay.style.display = 'none';
+        counter.style.display = 'none';
+        document.querySelector('.gallery-btn.prev').disabled = true;
+        document.querySelector('.gallery-btn.next').disabled = true;
+    }
                     document.getElementById('leftSephirahNotes').value = data.notes
                     document.getElementById('leftSephirahNotes').value = data.notes || '';
                     document.getElementById('rightSephirahNotes').value = data.additionalNotes || '';
