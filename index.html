@@ -44,6 +44,7 @@
             height: calc(100vh - 100px);
         }
 
+
         .panel {
             width: 33.33%;
             padding: 20px;
@@ -114,9 +115,11 @@
         }
 
         textarea {
-            height: 200px;
-            resize: none;
-        }
+    height: 200px;
+    resize: vertical;
+    min-height: 100px;
+    max-height: 80vh;
+}
 
         label {
             display: block;
@@ -223,7 +226,30 @@
                 <label>Correspondences</label>
                 <textarea></textarea>
             </div>
-            <textarea id="leftSephirahNotes" class="hidden" placeholder="Enter notes for this Sephirah..."></textarea>
+            <div id="sephirahInputs" class="hidden">
+                <div class="card-field">
+                    <label>Sephirah Images</label>
+                    <div class="image-container">
+                        <div class="gallery-controls">
+                            <button type="button" class="gallery-btn prev">←</button>
+                            <div class="gallery-display">
+                                <img id="sephirahImageDisplay" class="card-preview" alt="Sephirah Image">
+                                <div class="image-counter">1 / 1</div>
+                            </div>
+                            <button type="button" class="gallery-btn next">→</button>
+                        </div>
+                        <div class="upload-area">
+                            <input type="file" accept="image/*" id="sephirahImage" multiple>
+                        </div>
+                    </div>
+                </div>
+                <input type="text" placeholder="Title/Name">
+                <input type="text" placeholder="Hebrew Name">
+                <label>Wands</label>
+<textarea class="wands"></textarea>
+<label>Pentacles</label>
+<textarea class="pentacles"></textarea>
+            </div>
         </div>
 
         <!-- Center Panel -->
@@ -242,7 +268,12 @@
                 <label>Notes</label>
                 <textarea placeholder="Enter notes..."></textarea>
             </div>
-            <textarea id="rightSephirahNotes" class="hidden" placeholder="Additional notes..."></textarea>
+            <div id="sephirahAdditionalNotes" class="hidden">
+                <label>Swords</label>
+<textarea class="swords"></textarea>
+<label>Cups</label>
+<textarea class="cups"></textarea>
+            </div>
         </div>
     </div>
     <script>
@@ -332,14 +363,15 @@
         }
 
         async function selectPath(path) {
-            currentPath = path;
-            currentSephirah = null;
-            
-            document.getElementById('title').textContent = path.card;
-            document.getElementById('pathInputs').classList.remove('hidden');
-            document.getElementById('pathNotes').classList.remove('hidden');
-            document.getElementById('leftSephirahNotes').classList.add('hidden');
-            document.getElementById('rightSephirahNotes').classList.add('hidden');
+    currentPath = path;
+    currentSephirah = null;
+    
+    document.getElementById('title').textContent = path.card;
+    document.getElementById('pathInputs').classList.remove('hidden');
+    document.getElementById('pathNotes').classList.remove('hidden');
+    document.getElementById('sephirahInputs').classList.add('hidden');        // Changed this line
+    document.getElementById('sephirahAdditionalNotes').classList.add('hidden'); // Changed this line
+    // Removed the old references to leftSephirahNotes and rightSephirahNotes
 
             try {
                 const docRef = window.firestore.doc(window.db, 'pathNotes', path.card);
@@ -395,8 +427,8 @@
             document.getElementById('title').textContent = sephirot[key].name;
             document.getElementById('pathInputs').classList.add('hidden');
             document.getElementById('pathNotes').classList.add('hidden');
-            document.getElementById('leftSephirahNotes').classList.remove('hidden');
-            document.getElementById('rightSephirahNotes').classList.remove('hidden');
+            document.getElementById('sephirahInputs').classList.remove('hidden');
+            document.getElementById('sephirahAdditionalNotes').classList.remove('hidden');
 
             try {
                 const docRef = window.firestore.doc(window.db, 'sephirahNotes', key);
@@ -417,23 +449,33 @@
         }
 
         async function saveSephirahNotes() {
-            if (!currentSephirah) return;
-            
-            const leftNotes = document.getElementById('leftSephirahNotes').value;
-            const rightNotes = document.getElementById('rightSephirahNotes').value;
-            
-            try {
-                const docRef = window.firestore.doc(window.db, 'sephirahNotes', currentSephirah);
-                await window.firestore.setDoc(docRef, {
-                    notes: leftNotes,
-                    additionalNotes: rightNotes,
-                    lastModified: new Date()
-                });
-            } catch (error) {
-                console.error('Error saving notes:', error);
-                alert('Failed to save notes. Please check your connection.');
-            }
+    if (!currentSephirah) return;
+    
+    try {
+        const docRef = window.firestore.doc(window.db, 'sephirahNotes', currentSephirah);
+        const docSnap = await window.firestore.getDoc(docRef);
+        
+        const newData = {
+    title: document.querySelector('#sephirahInputs input[placeholder="Title/Name"]').value,
+    hebrewName: document.querySelector('#sephirahInputs input[placeholder="Hebrew Name"]').value,
+    wands: document.querySelector('#sephirahInputs textarea.wands').value,
+    pentacles: document.querySelector('#sephirahInputs textarea.pentacles').value,
+    swords: document.querySelector('#sephirahAdditionalNotes textarea.swords').value,
+    cups: document.querySelector('#sephirahAdditionalNotes textarea.cups').value,
+    lastModified: new Date()
+};
+
+        // Preserve existing images
+        if (docSnap.exists() && docSnap.data().images) {
+            newData.images = docSnap.data().images;
         }
+
+        await window.firestore.setDoc(docRef, newData);
+    } catch (error) {
+        console.error('Error saving notes:', error);
+        alert('Failed to save notes. Please check your connection.');
+    }
+}
         async function savePathNotes() {
     if (!currentPath) return;
     
@@ -583,6 +625,128 @@ document.querySelector('.gallery-btn.next').addEventListener('click', () => {
     });
 });
 
+// Add event listener for Sephirah image uploads
+document.getElementById('sephirahImage').addEventListener('change', async function(event) {
+    const files = event.target.files;
+    if (!files.length || !currentSephirah) return;
+
+    try {
+        const docRef = window.firestore.doc(window.db, 'sephirahNotes', currentSephirah);
+        const docSnap = await window.firestore.getDoc(docRef);
+        let existingImages = [];
+        
+        if (docSnap.exists() && docSnap.data().images) {
+            existingImages = docSnap.data().images;
+        }
+
+        for (let file of files) {
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const img = new Image();
+                    img.onload = async () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const maxDimension = 800;
+                        
+                        // Resize image if needed
+                        if (width > maxDimension || height > maxDimension) {
+                            if (width > height) {
+                                height = (height / width) * maxDimension;
+                                width = maxDimension;
+                            } else {
+                                width = (width / height) * maxDimension;
+                                height = maxDimension;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        const compressedData = canvas.toDataURL('image/jpeg', 0.6);
+
+                        const imageData = {
+                            data: compressedData,
+                            name: file.name,
+                            type: 'image/jpeg',
+                            lastModified: new Date().toISOString()
+                        };
+
+                        existingImages.push(imageData);
+
+                        await window.firestore.setDoc(docRef, {
+                            images: existingImages
+                        }, { merge: true });
+
+                        updateSephirahGallery(existingImages);
+                    };
+                    img.src = e.target.result;
+                } catch (error) {
+                    console.error('Error processing image:', error);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    } catch (error) {
+        console.error('Error saving images:', error);
+        alert('Failed to save images: ' + error.message);
+    }
+});
+
+// Function to update the Sephirah image gallery display
+function updateSephirahGallery(images) {
+    const imageDisplay = document.getElementById('sephirahImageDisplay');
+    const counter = document.querySelector('#sephirahInputs .image-counter');
+    const prevBtn = document.querySelector('#sephirahInputs .gallery-btn.prev');
+    const nextBtn = document.querySelector('#sephirahInputs .gallery-btn.next');
+
+    if (!images || !images.length) {
+        imageDisplay.style.display = 'none';
+        counter.style.display = 'none';
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        return;
+    }
+
+    imageDisplay.src = images[currentImageIndex].data;
+    imageDisplay.style.display = 'block';
+    counter.textContent = `${currentImageIndex + 1} / ${images.length}`;
+    counter.style.display = 'block';
+    
+    prevBtn.disabled = currentImageIndex === 0;
+    nextBtn.disabled = currentImageIndex === images.length - 1;
+}
+
+// Add event listeners for Sephirah gallery navigation
+document.querySelector('#sephirahInputs .gallery-btn.prev').addEventListener('click', () => {
+    const docRef = window.firestore.doc(window.db, 'sephirahNotes', currentSephirah);
+    window.firestore.getDoc(docRef).then(docSnap => {
+        if (docSnap.exists() && docSnap.data().images) {
+            const images = docSnap.data().images;
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                updateSephirahGallery(images);
+            }
+        }
+    });
+});
+
+document.querySelector('#sephirahInputs .gallery-btn.next').addEventListener('click', () => {
+    const docRef = window.firestore.doc(window.db, 'sephirahNotes', currentSephirah);
+    window.firestore.getDoc(docRef).then(docSnap => {
+        if (docSnap.exists() && docSnap.data().images) {
+            const images = docSnap.data().images;
+            if (currentImageIndex < images.length - 1) {
+                currentImageIndex++;
+                updateSephirahGallery(images);
+            }
+        }
+    });
+});
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             createTree();
@@ -591,47 +755,51 @@ document.querySelector('.gallery-btn.next').addEventListener('click', () => {
 
         // Clear selection when clicking background
         document.querySelector('.container').addEventListener('click', (e) => {
-            if (e.target.className === 'container' || e.target.className === 'panel') {
-                document.getElementById('title').textContent = '';
-                document.getElementById('pathInputs').classList.add('hidden');
-                document.getElementById('pathNotes').classList.add('hidden');
-                document.getElementById('leftSephirahNotes').classList.add('hidden');
-                document.getElementById('rightSephirahNotes').classList.add('hidden');
-                currentPath = null;
-                currentSephirah = null;
-            }
-        });
+    if (e.target.className === 'container' || e.target.className === 'panel') {
+        document.getElementById('title').textContent = '';
+        document.getElementById('pathInputs').classList.add('hidden');
+        document.getElementById('pathNotes').classList.add('hidden');
+        document.getElementById('sephirahInputs').classList.add('hidden');
+        document.getElementById('sephirahAdditionalNotes').classList.add('hidden');
+        currentPath = null;
+        currentSephirah = null;
+    }
+});
 
         // Auto-save setup
         function setupAutoSave() {
-            const textareas = document.querySelectorAll('textarea');
-            textareas.forEach(textarea => {
-                let saveTimeout;
-                textarea.addEventListener('input', () => {
-                    clearTimeout(saveTimeout);
-                    saveTimeout = setTimeout(() => {
-                        if (currentPath) {
-                            savePathNotes();
-                        } else if (currentSephirah) {
-                            saveSephirahNotes();
-                        }
-                    }, 1000);
-                });
-            });
+    // Handle all textareas
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        let saveTimeout;
+        textarea.addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                if (currentPath) {
+                    savePathNotes();
+                } else if (currentSephirah) {
+                    saveSephirahNotes();
+                }
+            }, 1000);
+        });
+    });
 
-            const inputs = document.querySelectorAll('#pathInputs input[type="text"]');
-            inputs.forEach(input => {
-                let saveTimeout;
-                input.addEventListener('input', () => {
-                    clearTimeout(saveTimeout);
-                    saveTimeout = setTimeout(() => {
-                        if (currentPath) {
-                            savePathNotes();
-                        }
-                    }, 1000);
-                });
-            });
-        }
+    // Handle all text inputs in both pathInputs and sephirahInputs
+    const inputs = document.querySelectorAll('#pathInputs input[type="text"], #sephirahInputs input[type="text"]');
+    inputs.forEach(input => {
+        let saveTimeout;
+        input.addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                if (currentPath) {
+                    savePathNotes();
+                } else if (currentSephirah) {
+                    saveSephirahNotes();
+                }
+            }, 1000);
+        });
+    });
+}
     </script>
 </body>
 </html>
