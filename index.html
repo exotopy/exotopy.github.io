@@ -81,7 +81,14 @@
             font-size: 12px;
             padding: 4px;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
+
+        .sephirah.selected {
+    background: #ffeb3b; /* This is a yellow color, you can change it */
+    border-color: #ffc107; /* Slightly darker yellow for the border */
+    box-shadow: 0 0 10px rgba(255, 235, 59, 0.5); /* Adds a glow effect */
+}
 
         .path-label {
             position: absolute;
@@ -196,6 +203,22 @@
     padding: 2px 8px;
     border-radius: 10px;
     font-size: 12px;
+}
+line {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+line.selected {
+    stroke: #ffeb3b; 
+    stroke-width: 6; 
+}
+
+.path-label.selected {
+    background: #ffeb3b;
+    font-weight: bold;
+    padding: 4px;
+    border-radius: 4px;
 }
     </style>
 </head>
@@ -363,90 +386,156 @@
         }
 
         async function selectPath(path) {
+    // Remove selected class from all sephirot
+    document.querySelectorAll('.sephirah').forEach(el => {
+        el.classList.remove('selected');
+    });
+
+    // Remove selected class from all paths
+    document.querySelectorAll('line').forEach(el => {
+        el.classList.remove('selected');
+    });
+    document.querySelectorAll('.path-label').forEach(el => {
+        el.classList.remove('selected');
+    });
+
+    // Add selected class to clicked path
+    const start = sephirot[path.start];
+    const end = sephirot[path.end];
+    const line = document.querySelector(`line[x1="${start.x}%"][y1="${start.y}%"][x2="${end.x}%"][y2="${end.y}%"]`);
+    line.classList.add('selected');
+
+    // Add selected class to associated label
+    const label = Array.from(document.querySelectorAll('.path-label'))
+        .find(el => el.textContent === path.card);
+    if (label) {
+        label.classList.add('selected');
+    }
+
     currentPath = path;
     currentSephirah = null;
     
     document.getElementById('title').textContent = path.card;
     document.getElementById('pathInputs').classList.remove('hidden');
     document.getElementById('pathNotes').classList.remove('hidden');
-    document.getElementById('sephirahInputs').classList.add('hidden');        // Changed this line
-    document.getElementById('sephirahAdditionalNotes').classList.add('hidden'); // Changed this line
-    // Removed the old references to leftSephirahNotes and rightSephirahNotes
+    document.getElementById('sephirahInputs').classList.add('hidden');
+    document.getElementById('sephirahAdditionalNotes').classList.add('hidden');
 
-            try {
-                const docRef = window.firestore.doc(window.db, 'pathNotes', path.card);
-                const docSnap = await window.firestore.getDoc(docRef);
-                
-                if (docSnap.exists()) {
-    const data = docSnap.data();
-    
-    // Load image if it exists
-    const imageDisplay = document.getElementById('cardImageDisplay');
-    const prevBtn = document.querySelector('.gallery-btn.prev');
-    const nextBtn = document.querySelector('.gallery-btn.next');
-    const counter = document.querySelector('.image-counter');
-
-    if (data.images && data.images.length) {
-        currentImageIndex = 0; // Reset to first image
-        imageDisplay.src = data.images[currentImageIndex].data;
-        imageDisplay.style.display = 'block';
-        counter.textContent = `1 / ${data.images.length}`;
-        counter.style.display = 'block';
+    try {
+        const docRef = window.firestore.doc(window.db, 'pathNotes', path.card);
+        const docSnap = await window.firestore.getDoc(docRef);
         
-        // Enable/disable navigation buttons
-        prevBtn.disabled = true; // First image, so disable prev
-        nextBtn.disabled = data.images.length === 1; // Disable next if only one image
-    } else {
-        imageDisplay.style.display = 'none';
-        counter.style.display = 'none';
-        prevBtn.disabled = true;
-        nextBtn.disabled = true;
-    }
-
-    // Load other fields
-    document.querySelector('#pathNotes textarea').value = data.notes || '';
-    document.querySelector('#pathInputs input[placeholder="Card Name"]').value = data.cardName || '';
-    document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = data.hebrewCharacter || '';
-    document.querySelector('#pathInputs textarea').value = data.correspondences || '';
-                } else {
-                    document.getElementById('cardImageDisplay').style.display = 'none';
-                    document.querySelector('#pathNotes textarea').value = '';
-                    document.querySelector('#pathInputs input[placeholder="Card Name"]').value = '';
-                    document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = '';
-                    document.querySelector('#pathInputs textarea').value = '';
-                }
-            } catch (error) {
-                console.error('Error loading notes:', error);
-            }
-        }
-
-        async function selectSephirah(key) {
-            currentSephirah = key;
-            currentPath = null;
+        if (docSnap.exists()) {
+            const data = docSnap.data();
             
-            document.getElementById('title').textContent = sephirot[key].name;
-            document.getElementById('pathInputs').classList.add('hidden');
-            document.getElementById('pathNotes').classList.add('hidden');
-            document.getElementById('sephirahInputs').classList.remove('hidden');
-            document.getElementById('sephirahAdditionalNotes').classList.remove('hidden');
+            // Load image if it exists
+            const imageDisplay = document.getElementById('cardImageDisplay');
+            const prevBtn = document.querySelector('#pathInputs .gallery-btn.prev');
+            const nextBtn = document.querySelector('#pathInputs .gallery-btn.next');
+            const counter = document.querySelector('#pathInputs .image-counter');
 
-            try {
-                const docRef = window.firestore.doc(window.db, 'sephirahNotes', key);
-                const docSnap = await window.firestore.getDoc(docRef);
+            if (data.images && data.images.length) {
+                currentImageIndex = 0;
+                imageDisplay.src = data.images[currentImageIndex].data;
+                imageDisplay.style.display = 'block';
+                counter.textContent = `1 / ${data.images.length}`;
+                counter.style.display = 'block';
                 
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    document.getElementById('leftSephirahNotes').value = data.notes
-                    document.getElementById('leftSephirahNotes').value = data.notes || '';
-                    document.getElementById('rightSephirahNotes').value = data.additionalNotes || '';
-                } else {
-                    document.getElementById('leftSephirahNotes').value = '';
-                    document.getElementById('rightSephirahNotes').value = '';
-                }
-            } catch (error) {
-                console.error('Error loading notes:', error);
+                prevBtn.disabled = true;  // First image, so disable prev
+                nextBtn.disabled = data.images.length === 1;  // Disable next if only one image
+            } else {
+                imageDisplay.style.display = 'none';
+                counter.style.display = 'none';
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
             }
+
+            // Load other fields
+            document.querySelector('#pathNotes textarea').value = data.notes || '';
+            document.querySelector('#pathInputs input[placeholder="Card Name"]').value = data.cardName || '';
+            document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = data.hebrewCharacter || '';
+            document.querySelector('#pathInputs textarea').value = data.correspondences || '';
+        } else {
+            document.getElementById('cardImageDisplay').style.display = 'none';
+            document.querySelector('#pathNotes textarea').value = '';
+            document.querySelector('#pathInputs input[placeholder="Card Name"]').value = '';
+            document.querySelector('#pathInputs input[placeholder="Hebrew Character"]').value = '';
+            document.querySelector('#pathInputs textarea').value = '';
         }
+    } catch (error) {
+        console.error('Error loading notes:', error);
+    }
+}
+
+async function selectSephirah(key) {
+    // Remove selected class from all sephirot
+    document.querySelectorAll('.sephirah').forEach(el => {
+        el.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked sephirah
+    document.querySelector(`.sephirah-group[style*="left: ${sephirot[key].x}%"][style*="top: ${sephirot[key].y}%"] .sephirah`)
+        .classList.add('selected');
+
+    currentSephirah = key;
+    currentPath = null;
+    
+    document.getElementById('title').textContent = sephirot[key].name;
+    document.getElementById('pathInputs').classList.add('hidden');
+    document.getElementById('pathNotes').classList.add('hidden');
+    document.getElementById('sephirahInputs').classList.remove('hidden');
+    document.getElementById('sephirahAdditionalNotes').classList.remove('hidden');
+
+    try {
+        const docRef = window.firestore.doc(window.db, 'sephirahNotes', key);
+        const docSnap = await window.firestore.getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            
+            // Load images if they exist
+            const imageDisplay = document.getElementById('sephirahImageDisplay');
+            const prevBtn = document.querySelector('#sephirahInputs .gallery-btn.prev');
+            const nextBtn = document.querySelector('#sephirahInputs .gallery-btn.next');
+            const counter = document.querySelector('#sephirahInputs .image-counter');
+
+            if (data.images && data.images.length) {
+                currentImageIndex = 0;
+                imageDisplay.src = data.images[currentImageIndex].data;
+                imageDisplay.style.display = 'block';
+                counter.textContent = `1 / ${data.images.length}`;
+                counter.style.display = 'block';
+                
+                prevBtn.disabled = true;
+                nextBtn.disabled = data.images.length === 1;
+            } else {
+                imageDisplay.style.display = 'none';
+                counter.style.display = 'none';
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+            }
+
+            // Load the new fields
+            document.querySelector('#sephirahInputs input[placeholder="Title/Name"]').value = data.title || '';
+            document.querySelector('#sephirahInputs input[placeholder="Hebrew Name"]').value = data.hebrewName || '';
+            document.querySelector('#sephirahInputs textarea.wands').value = data.wands || '';
+            document.querySelector('#sephirahInputs textarea.pentacles').value = data.pentacles || '';
+            document.querySelector('#sephirahAdditionalNotes textarea.swords').value = data.swords || '';
+            document.querySelector('#sephirahAdditionalNotes textarea.cups').value = data.cups || '';
+        } else {
+            // Clear all fields if no data exists
+            document.getElementById('sephirahImageDisplay').style.display = 'none';
+            document.querySelector('#sephirahInputs input[placeholder="Title/Name"]').value = '';
+            document.querySelector('#sephirahInputs input[placeholder="Hebrew Name"]').value = '';
+            document.querySelector('#sephirahInputs textarea.wands').value = '';
+            document.querySelector('#sephirahInputs textarea.pentacles').value = '';
+            document.querySelector('#sephirahAdditionalNotes textarea.swords').value = '';
+            document.querySelector('#sephirahAdditionalNotes textarea.cups').value = '';
+        }
+    } catch (error) {
+        console.error('Error loading notes:', error);
+    }
+}
 
         async function saveSephirahNotes() {
     if (!currentSephirah) return;
@@ -756,6 +845,19 @@ document.querySelector('#sephirahInputs .gallery-btn.next').addEventListener('cl
         // Clear selection when clicking background
         document.querySelector('.container').addEventListener('click', (e) => {
     if (e.target.className === 'container' || e.target.className === 'panel') {
+        // Remove selected class from all sephirot
+        document.querySelectorAll('.sephirah').forEach(el => {
+            el.classList.remove('selected');
+        });
+        
+        // Remove selected class from all paths
+        document.querySelectorAll('line').forEach(el => {
+            el.classList.remove('selected');
+        });
+        document.querySelectorAll('.path-label').forEach(el => {
+            el.classList.remove('selected');
+        });
+
         document.getElementById('title').textContent = '';
         document.getElementById('pathInputs').classList.add('hidden');
         document.getElementById('pathNotes').classList.add('hidden');
