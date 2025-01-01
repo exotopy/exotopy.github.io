@@ -85,7 +85,7 @@
         }
 
         .sephirah.selected {
-    background: #ffeb3b; /* This is a yellow color, you can change it */
+    background: #ff1aff; /* This is a yellow color, you can change it */
     border-color: #ffc107; /* Slightly darker yellow for the border */
     box-shadow: 0 0 10px rgba(255, 235, 59, 0.5); /* Adds a glow effect */
 }
@@ -210,15 +210,42 @@ line {
 }
 
 line.selected {
-    stroke: #ffeb3b; 
+    stroke: #ff23ab; 
     stroke-width: 6; 
 }
 
 .path-label.selected {
-    background: #ffeb3b;
+    background: #ffffff;
     font-weight: bold;
     padding: 4px;
     border-radius: 4px;
+}
+.gallery-display {
+    position: relative;
+}
+
+.image-controls {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    gap: 5px;
+    padding: 5px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 4px;
+}
+
+.image-control-btn {
+    padding: 2px 5px;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.image-control-btn:hover {
+    background: #e0e0e0;
 }
     </style>
 </head>
@@ -235,6 +262,11 @@ line.selected {
                             <button type="button" class="gallery-btn prev">←</button>
                             <div class="gallery-display">
                                 <img id="cardImageDisplay" class="card-preview" alt="Card Image">
+                                <div class="image-controls">
+                                    <button type="button" class="image-control-btn move-left">←</button>
+                                    <button type="button" class="image-control-btn move-right">→</button>
+                                    <button type="button" class="image-control-btn delete">×</button>
+                                </div>
                                 <div class="image-counter">1 / 1</div>
                             </div>
                             <button type="button" class="gallery-btn next">→</button>
@@ -256,7 +288,12 @@ line.selected {
                         <div class="gallery-controls">
                             <button type="button" class="gallery-btn prev">←</button>
                             <div class="gallery-display">
-                                <img id="sephirahImageDisplay" class="card-preview" alt="Sephirah Image">
+                                <img id="cardImageDisplay" class="card-preview" alt="Card Image">
+                                <div class="image-controls">
+                                    <button type="button" class="image-control-btn move-left">←</button>
+                                    <button type="button" class="image-control-btn move-right">→</button>
+                                    <button type="button" class="image-control-btn delete">×</button>
+                                </div>
                                 <div class="image-counter">1 / 1</div>
                             </div>
                             <button type="button" class="gallery-btn next">→</button>
@@ -293,9 +330,9 @@ line.selected {
             </div>
             <div id="sephirahAdditionalNotes" class="hidden">
                 <label>Swords</label>
-<textarea class="swords"></textarea>
-<label>Cups</label>
-<textarea class="cups"></textarea>
+            <textarea class="swords"></textarea>
+            <label>Cups</label>
+            <textarea class="cups"></textarea>
             </div>
         </div>
     </div>
@@ -592,6 +629,70 @@ async function selectSephirah(key) {
     }
 }
 
+async function deleteCurrentImage(isPath = true) {
+    const docRef = isPath 
+        ? window.firestore.doc(window.db, 'pathNotes', currentPath.card)
+        : window.firestore.doc(window.db, 'sephirahNotes', currentSephirah);
+
+    try {
+        const docSnap = await window.firestore.getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().images) {
+            const images = docSnap.data().images;
+            images.splice(currentImageIndex, 1);
+            
+            await window.firestore.setDoc(docRef, { images }, { merge: true });
+            
+            if (images.length === 0) {
+                currentImageIndex = 0;
+                if (isPath) {
+                    updateGallery([]);
+                } else {
+                    updateSephirahGallery([]);
+                }
+            } else {
+                currentImageIndex = Math.min(currentImageIndex, images.length - 1);
+                if (isPath) {
+                    updateGallery(images);
+                } else {
+                    updateSephirahGallery(images);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error deleting image:', error);
+        alert('Failed to delete image. Please try again.');
+    }
+}
+
+async function moveImage(direction, isPath = true) {
+    const docRef = isPath 
+        ? window.firestore.doc(window.db, 'pathNotes', currentPath.card)
+        : window.firestore.doc(window.db, 'sephirahNotes', currentSephirah);
+
+    try {
+        const docSnap = await window.firestore.getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().images) {
+            const images = docSnap.data().images;
+            const newIndex = currentImageIndex + direction;
+            
+            if (newIndex >= 0 && newIndex < images.length) {
+                // Swap images
+                [images[currentImageIndex], images[newIndex]] = [images[newIndex], images[currentImageIndex]];
+                await window.firestore.setDoc(docRef, { images }, { merge: true });
+                
+                currentImageIndex = newIndex;
+                if (isPath) {
+                    updateGallery(images);
+                } else {
+                    updateSephirahGallery(images);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error moving image:', error);
+        alert('Failed to move image. Please try again.');
+    }
+}
 
         document.getElementById('cardImage').addEventListener('change', async function(event) {
     const files = event.target.files;
@@ -669,6 +770,7 @@ function updateGallery(images) {
     const counter = document.querySelector('.image-counter');
     const prevBtn = document.querySelector('.gallery-btn.prev');
     const nextBtn = document.querySelector('.gallery-btn.next');
+    
 
     if (!images || !images.length) {
         imageDisplay.style.display = 'none';
@@ -685,6 +787,14 @@ function updateGallery(images) {
     
     prevBtn.disabled = currentImageIndex === 0;
     nextBtn.disabled = currentImageIndex === images.length - 1;
+    const moveLeftBtn = document.querySelector('#pathInputs .image-control-btn.move-left');
+    const moveRightBtn = document.querySelector('#pathInputs .image-control-btn.move-right');
+    if (moveLeftBtn && moveRightBtn) {
+        moveLeftBtn.disabled = currentImageIndex === 0;
+        moveRightBtn.disabled = currentImageIndex === images.length - 1;
+    }
+
+    
 }
 
 // Add event listeners for gallery navigation
@@ -807,6 +917,12 @@ function updateSephirahGallery(images) {
     
     prevBtn.disabled = currentImageIndex === 0;
     nextBtn.disabled = currentImageIndex === images.length - 1;
+    const moveLeftBtn = document.querySelector('#sephirahInputs .image-control-btn.move-left');
+    const moveRightBtn = document.querySelector('#sephirahInputs .image-control-btn.move-right');
+    if (moveLeftBtn && moveRightBtn) {
+        moveLeftBtn.disabled = currentImageIndex === 0;
+        moveRightBtn.disabled = currentImageIndex === images.length - 1;
+    }
 }
 
 // Add event listeners for Sephirah gallery navigation
@@ -835,7 +951,35 @@ document.querySelector('#sephirahInputs .gallery-btn.next').addEventListener('cl
         }
     });
 });
+// For paths
+document.querySelector('#pathInputs .image-control-btn.delete').addEventListener('click', () => {
+    if (confirm('Are you sure you want to delete this image?')) {
+        deleteCurrentImage(true);
+    }
+});
 
+document.querySelector('#pathInputs .image-control-btn.move-left').addEventListener('click', () => {
+    moveImage(-1, true);
+});
+
+document.querySelector('#pathInputs .image-control-btn.move-right').addEventListener('click', () => {
+    moveImage(1, true);
+});
+
+// For sephirot
+document.querySelector('#sephirahInputs .image-control-btn.delete').addEventListener('click', () => {
+    if (confirm('Are you sure you want to delete this image?')) {
+        deleteCurrentImage(false);
+    }
+});
+
+document.querySelector('#sephirahInputs .image-control-btn.move-left').addEventListener('click', () => {
+    moveImage(-1, false);
+});
+
+document.querySelector('#sephirahInputs .image-control-btn.move-right').addEventListener('click', () => {
+    moveImage(1, false);
+});
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             createTree();
