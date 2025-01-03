@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latin Study Hub</title>
+    <title>Tarot Study Hub</title>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot } 
@@ -187,6 +187,7 @@
 }
 
 .note, .resource {
+    padding: 10px;  /* Reset padding to normal */
 }
 
 h3 {
@@ -196,7 +197,6 @@ h3 {
 /* Update these CSS rules */
 .note, .resource {
     position: relative;  /* Add this for absolute positioning of buttons */
-    padding: 15px;  /* Reset padding to normal */
 }
 
 .note-controls, .resource-controls {
@@ -225,12 +225,12 @@ h3 {
 }
 
 h3 {
-    margin-top: 0;  /* Remove top margin from title */
+    margin-top: 0; 
 }
 
 .editing-badge {
-    right: auto;  /* Remove right positioning */
-    left: 10px;   /* Position from left instead */
+    right: auto; 
+    left: 10px;   
 }
     </style>
 </head>
@@ -290,6 +290,9 @@ h3 {
 
     <script>
         // Global variables
+const statusInput = document.getElementById('currentStatus');
+const statusWarning = document.getElementById('statusWarning');
+const TOPIC_ID = 'tarot';  // Change this for each topic page
 let notes = [];
 let resources = [];
 let currentStatus = '';
@@ -297,6 +300,7 @@ let itemToDelete = null;
 let statusSaveTimeout = null;
 let editingNoteId = null;
 let editingResourceId = null;
+// Add this with your other global variables
 
 // Tab functionality
 function showTab(tabName) {
@@ -412,65 +416,9 @@ function renderNotes() {
     `).join('');
 }
 
-function renderResources() {
-    const resourcesList = document.getElementById('resourcesList');
-    resourcesList.innerHTML = resources.map(resource => {
-        let linkDisplay = '';
-        if (resource.url) {
-            const displayText = resource.urlTitle || 'Open Resource';
-            linkDisplay = `<a href="${resource.url}" target="_blank">${displayText}</a>`;
-        }
 
-        return `
-            <div class="resource ${resource.id === editingResourceId ? 'editing' : ''}">
-                ${resource.id === editingResourceId ? '<div class="editing-badge">Currently Editing</div>' : ''}
-                <div class="resource-controls">
-                    <button class="control-button" onclick="editResource('${resource.id}')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                        </svg>
-                    </button>
-                    <button class="control-button" onclick="deleteItem('resource', '${resource.id}')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-                        </svg>
-                    </button>
-                </div>
-                <h3>${resource.title}</h3>
-                ${linkDisplay}
-                ${resource.notes ? `<p>${resource.notes}</p>` : ''}
-            </div>
-        `;
-    }).join('');
-}
 
 // Firebase operations
-async function saveNote() {
-    const { collection, addDoc, doc, deleteDoc } = window.firestore;
-    const title = document.getElementById('noteTitle').value;
-    const content = document.getElementById('noteContent').value;
-    if (!title || !content) return;
-
-    try {
-        const notesRef = collection(window.db, 'notes');
-        await addDoc(notesRef, {
-            title,
-            content,
-            date: new Date()
-        });
-
-        if (editingNoteId) {
-            const oldNoteRef = doc(window.db, 'notes', editingNoteId);
-            await deleteDoc(oldNoteRef);
-            editingNoteId = null;
-        }
-
-        cancelAddNote();
-    } catch (error) {
-        console.error('Error saving note:', error);
-        alert('Error saving note. Please try again.');
-    }
-}
 
 async function editNote(id) {
     const note = notes.find(n => n.id === id);
@@ -483,37 +431,6 @@ async function editNote(id) {
     renderNotes(); // Refresh to show editing indicator
 }
 
-// Update the saveResource function
-async function saveResource() {
-    const { collection, addDoc, doc, deleteDoc } = window.firestore;
-    const title = document.getElementById('resourceTitle').value;
-    const urlTitle = document.getElementById('urlTitle').value;
-    const url = document.getElementById('resourceUrl').value;
-    const notes = document.getElementById('resourceNotes').value;
-    if (!title) return;
-
-    try {
-        const resourcesRef = collection(window.db, 'resources');
-        await addDoc(resourcesRef, {
-            title,
-            urlTitle,
-            url,
-            notes,
-            date: new Date()
-        });
-
-        if (editingResourceId) {
-            const oldResourceRef = doc(window.db, 'resources', editingResourceId);
-            await deleteDoc(oldResourceRef);
-            editingResourceId = null;
-        }
-
-        cancelAddResource();
-    } catch (error) {
-        console.error('Error saving resource:', error);
-        alert('Error saving resource. Please try again.');
-    }
-}
 
 // Update the editResource function
 async function editResource(id) {
@@ -573,31 +490,13 @@ function renderResources() {
     }).join('');
 }
 
-async function confirmDelete() {
-    if (!itemToDelete) return;
-    const { doc, deleteDoc } = window.firestore;
 
-    try {
-        if (itemToDelete.type === 'note') {
-            const noteRef = doc(window.db, 'notes', itemToDelete.id);
-            await deleteDoc(noteRef);
-        } else {
-            const resourceRef = doc(window.db, 'resources', itemToDelete.id);
-            await deleteDoc(resourceRef);
-        }
-        cancelDelete();
-    } catch (error) {
-        console.error('Error deleting item:', error);
-        alert('Error deleting item. Please try again.');
-    }
-}
-
-// Initialize page with real-time listeners
+// Update the initialization listeners
 document.addEventListener('DOMContentLoaded', function() {
     const { collection, doc, onSnapshot } = window.firestore;
     
     // Listen for status changes
-    const statusRef = doc(window.db, 'status', 'current');
+    const statusRef = doc(window.db, `status/${TOPIC_ID}/current`);
     onSnapshot(statusRef, doc => {
         if (doc.exists()) {
             currentStatus = doc.data().status;
@@ -606,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Listen for notes changes
-    const notesRef = collection(window.db, 'notes');
+    const notesRef = collection(window.db, `${TOPIC_ID}_notes`);
     onSnapshot(notesRef, snapshot => {
         notes = [];
         snapshot.forEach(doc => {
@@ -616,7 +515,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Listen for resources changes
-    const resourcesRef = collection(window.db, 'resources');
+    const resourcesRef = collection(window.db, `${TOPIC_ID}_resources`);
     onSnapshot(resourcesRef, snapshot => {
         resources = [];
         snapshot.forEach(doc => {
@@ -624,38 +523,101 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         renderResources();
     });
+});
 
-    // Set up current status listener with save warning
-    const statusInput = document.getElementById('currentStatus');
-    const statusWarning = document.getElementById('statusWarning');
+// Update saveNote function
+async function saveNote() {
+    const { collection, addDoc, doc, deleteDoc } = window.firestore;
+    const title = document.getElementById('noteTitle').value;
+    const content = document.getElementById('noteContent').value;
+    if (!title || !content) return;
 
-    statusInput.addEventListener('input', function(e) {
-        currentStatus = e.target.value;
-        statusWarning.style.display = 'block';
-        statusWarning.style.cursor = 'pointer';
-        
-        if (statusSaveTimeout) {
-            clearTimeout(statusSaveTimeout);
+    try {
+        const notesRef = collection(window.db, `${TOPIC_ID}_notes`);
+        await addDoc(notesRef, {
+            title,
+            content,
+            date: new Date()
+        });
+
+        if (editingNoteId) {
+            const oldNoteRef = doc(window.db, `${TOPIC_ID}_notes`, editingNoteId);
+            await deleteDoc(oldNoteRef);
+            editingNoteId = null;
         }
 
-        statusSaveTimeout = setTimeout(async () => {
-            try {
-                const statusRef = doc(window.db, 'status', 'current');
-                await window.firestore.setDoc(statusRef, {
-                    status: currentStatus,
-                    updatedAt: new Date()
-                });
-                statusWarning.style.display = 'none';
-            } catch (error) {
-                console.error('Error saving status:', error);
-                statusWarning.textContent = 'Error saving! Click to try again.';
-            }
-        }, 2000);
-    });
+        cancelAddNote();
+    } catch (error) {
+        console.error('Error saving note:', error);
+        alert('Error saving note. Please try again.');
+    }
+}
 
-    statusWarning.addEventListener('click', async () => {
+// Update saveResource function
+async function saveResource() {
+    const { collection, addDoc, doc, deleteDoc } = window.firestore;
+    const title = document.getElementById('resourceTitle').value;
+    const urlTitle = document.getElementById('urlTitle').value;
+    const url = document.getElementById('resourceUrl').value;
+    const notes = document.getElementById('resourceNotes').value;
+    if (!title) return;
+
+    try {
+        const resourcesRef = collection(window.db, `${TOPIC_ID}_resources`);
+        await addDoc(resourcesRef, {
+            title,
+            urlTitle,
+            url,
+            notes,
+            date: new Date()
+        });
+
+        if (editingResourceId) {
+            const oldResourceRef = doc(window.db, `${TOPIC_ID}_resources`, editingResourceId);
+            await deleteDoc(oldResourceRef);
+            editingResourceId = null;
+        }
+
+        cancelAddResource();
+    } catch (error) {
+        console.error('Error saving resource:', error);
+        alert('Error saving resource. Please try again.');
+    }
+}
+
+// Update confirmDelete function
+async function confirmDelete() {
+    if (!itemToDelete) return;
+    const { doc, deleteDoc } = window.firestore;
+
+    try {
+        if (itemToDelete.type === 'note') {
+            const noteRef = doc(window.db, `${TOPIC_ID}_notes`, itemToDelete.id);
+            await deleteDoc(noteRef);
+        } else {
+            const resourceRef = doc(window.db, `${TOPIC_ID}_resources`, itemToDelete.id);
+            await deleteDoc(resourceRef);
+        }
+        cancelDelete();
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        alert('Error deleting item. Please try again.');
+    }
+}
+
+// Update status save handler
+statusInput.addEventListener('input', function(e) {
+    currentStatus = e.target.value;
+    statusWarning.style.display = 'block';
+    statusWarning.style.cursor = 'pointer';
+    
+    if (statusSaveTimeout) {
+        clearTimeout(statusSaveTimeout);
+    }
+
+    statusSaveTimeout = setTimeout(async () => {
         try {
-            const statusRef = doc(window.db, 'status', 'current');
+            const statusRef = doc(window.db, `status/${TOPIC_ID}/current`);
             await window.firestore.setDoc(statusRef, {
                 status: currentStatus,
                 updatedAt: new Date()
@@ -665,7 +627,22 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error saving status:', error);
             statusWarning.textContent = 'Error saving! Click to try again.';
         }
-    });
+    }, 2000);
+});
+
+// Update status warning click handler
+statusWarning.addEventListener('click', async () => {
+    try {
+        const statusRef = doc(window.db, `status/${TOPIC_ID}/current`);
+        await window.firestore.setDoc(statusRef, {
+            status: currentStatus,
+            updatedAt: new Date()
+        });
+        statusWarning.style.display = 'none';
+    } catch (error) {
+        console.error('Error saving status:', error);
+        statusWarning.textContent = 'Error saving! Click to try again.';
+    }
 });
     </script>
 </body>
