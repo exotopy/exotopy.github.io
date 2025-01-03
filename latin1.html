@@ -127,6 +127,111 @@
     border-radius: 12px;
     font-size: 12px;
 }
+
+
+.note-controls, .resource-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    margin: 0;  /* Remove the previous margin */
+    display: flex;
+    gap: 5px;
+}
+
+/* Style for the smaller buttons */
+.control-button {
+    padding: 4px 8px;
+    font-size: 12px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.control-button:hover {
+    background: #f0f0f0;
+}
+
+/* Move the editing badge to not overlap with buttons */
+.editing-badge {
+    right: auto;  /* Remove right positioning */
+    left: 10px;   /* Position from left instead */
+}
+.control-button {
+    padding: 4px;
+    font-size: 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-button:hover {
+    color: #007bff;
+}
+/* Add or update these CSS rules */
+.note-header, .resource-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.note-controls, .resource-controls {
+    display: flex;
+    gap: 5px;
+    position: static;  /* Remove absolute positioning */
+}
+
+.note, .resource {
+}
+
+h3 {
+    margin: 0;  /* Remove default margin from title */
+}
+
+/* Update these CSS rules */
+.note, .resource {
+    position: relative;  /* Add this for absolute positioning of buttons */
+    padding: 15px;  /* Reset padding to normal */
+}
+
+.note-controls, .resource-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    margin: 0;
+    display: flex;
+    gap: 5px;
+}
+
+.control-button {
+    padding: 4px;
+    font-size: 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-button:hover {
+    color: #007bff;
+}
+
+h3 {
+    margin-top: 0;  /* Remove top margin from title */
+}
+
+.editing-badge {
+    right: auto;  /* Remove right positioning */
+    left: 10px;   /* Position from left instead */
+}
     </style>
 </head>
 <body>
@@ -161,11 +266,12 @@
         <button onclick="showAddResourceForm()">Add Resource</button>
         <div id="addResourceForm" style="display: none;">
             <h3>Add New Resource</h3>
-            <input type="text" id="resourceTitle" placeholder="Title" style="width: 100%; margin-bottom: 10px;">
-            <input type="text" id="resourceUrl" placeholder="URL (optional)" style="width: 100%; margin-bottom: 10px;">
+            <input type="text" id="resourceTitle" placeholder="Resource Title" style="width: 100%; margin-bottom: 10px;">
+            <input type="text" id="urlTitle" placeholder="Link Title" style="width: 100%; margin-bottom: 10px;">
+            <input type="text" id="resourceUrl" placeholder="URL" style="width: 100%; margin-bottom: 10px;">
             <textarea id="resourceNotes" placeholder="Notes"></textarea>
             <button onclick="saveResource()">Save</button>
-            <button onclick="cancelAddResource()">Cancel</button>
+            <button onclick="tryToCancelResource()">Cancel</button>
         </div>
         <div id="resourcesList"></div>
     </div>
@@ -229,6 +335,8 @@ function confirmCancelEdit() {
 function hideEditCancelConfirm() {
     document.getElementById('editCancelConfirm').style.display = 'none';
     document.getElementById('overlay').style.display = 'none';
+    renderNotes();  // Add these lines to refresh both views
+    renderResources();
 }
 
 function cancelAddNote() {
@@ -236,6 +344,7 @@ function cancelAddNote() {
     document.getElementById('noteTitle').value = '';
     document.getElementById('noteContent').value = '';
     editingNoteId = null;
+    renderNotes();  // Add this line to refresh the view
 }
 
 function showAddResourceForm(isEditing = false) {
@@ -257,9 +366,11 @@ function tryToCancelResource() {
 function cancelAddResource() {
     document.getElementById('addResourceForm').style.display = 'none';
     document.getElementById('resourceTitle').value = '';
+    document.getElementById('urlTitle').value = '';
     document.getElementById('resourceUrl').value = '';
     document.getElementById('resourceNotes').value = '';
     editingResourceId = null;
+    renderResources();  // Add this line to refresh the view
 }
 
 // Delete functionality
@@ -280,31 +391,57 @@ function renderNotes() {
     const notesList = document.getElementById('notesList');
     notesList.innerHTML = notes.map(note => `
         <div class="note ${note.id === editingNoteId ? 'editing' : ''}">
-            <h3>${note.title}</h3>
-            <pre style="white-space: pre-wrap;">${note.content}</pre>
-            <div class="note-controls">
-                <button onclick="editNote('${note.id}')">Edit</button>
-                <button onclick="deleteItem('note', '${note.id}')">Delete</button>
-            </div>
             ${note.id === editingNoteId ? '<div class="editing-badge">Currently Editing</div>' : ''}
+            <div class="note-header">
+                <h3>${note.title}</h3>
+                <div class="note-controls">
+                    <button class="control-button" onclick="editNote('${note.id}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                        </svg>
+                    </button>
+                    <button class="control-button" onclick="deleteItem('note', '${note.id}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <pre style="white-space: pre-wrap;">${note.content}</pre>
         </div>
     `).join('');
 }
 
 function renderResources() {
     const resourcesList = document.getElementById('resourcesList');
-    resourcesList.innerHTML = resources.map(resource => `
-        <div class="resource ${resource.id === editingResourceId ? 'editing' : ''}">
-            <h3>${resource.title}</h3>
-            ${resource.url ? `<a href="${resource.url}" target="_blank">Open Resource</a>` : ''}
-            ${resource.notes ? `<p>${resource.notes}</p>` : ''}
-            <div class="resource-controls">
-                <button onclick="editResource('${resource.id}')">Edit</button>
-                <button onclick="deleteItem('resource', '${resource.id}')">Delete</button>
+    resourcesList.innerHTML = resources.map(resource => {
+        let linkDisplay = '';
+        if (resource.url) {
+            const displayText = resource.urlTitle || 'Open Resource';
+            linkDisplay = `<a href="${resource.url}" target="_blank">${displayText}</a>`;
+        }
+
+        return `
+            <div class="resource ${resource.id === editingResourceId ? 'editing' : ''}">
+                ${resource.id === editingResourceId ? '<div class="editing-badge">Currently Editing</div>' : ''}
+                <div class="resource-controls">
+                    <button class="control-button" onclick="editResource('${resource.id}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                        </svg>
+                    </button>
+                    <button class="control-button" onclick="deleteItem('resource', '${resource.id}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <h3>${resource.title}</h3>
+                ${linkDisplay}
+                ${resource.notes ? `<p>${resource.notes}</p>` : ''}
             </div>
-            ${resource.id === editingResourceId ? '<div class="editing-badge">Currently Editing</div>' : ''}
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Firebase operations
@@ -346,9 +483,11 @@ async function editNote(id) {
     renderNotes(); // Refresh to show editing indicator
 }
 
+// Update the saveResource function
 async function saveResource() {
     const { collection, addDoc, doc, deleteDoc } = window.firestore;
     const title = document.getElementById('resourceTitle').value;
+    const urlTitle = document.getElementById('urlTitle').value;
     const url = document.getElementById('resourceUrl').value;
     const notes = document.getElementById('resourceNotes').value;
     if (!title) return;
@@ -357,6 +496,7 @@ async function saveResource() {
         const resourcesRef = collection(window.db, 'resources');
         await addDoc(resourcesRef, {
             title,
+            urlTitle,
             url,
             notes,
             date: new Date()
@@ -375,16 +515,62 @@ async function saveResource() {
     }
 }
 
+// Update the editResource function
 async function editResource(id) {
     const resource = resources.find(r => r.id === id);
     if (!resource) return;
 
     editingResourceId = id;
     document.getElementById('resourceTitle').value = resource.title;
+    document.getElementById('urlTitle').value = resource.urlTitle || '';
     document.getElementById('resourceUrl').value = resource.url || '';
     document.getElementById('resourceNotes').value = resource.notes || '';
     showAddResourceForm(true);
-    renderResources(); // Refresh to show editing indicator
+    renderResources();
+}
+
+// Update the cancelAddResource function
+function cancelAddResource() {
+    document.getElementById('addResourceForm').style.display = 'none';
+    document.getElementById('resourceTitle').value = '';
+    document.getElementById('urlTitle').value = '';
+    document.getElementById('resourceUrl').value = '';
+    document.getElementById('resourceNotes').value = '';
+    editingResourceId = null;
+}
+
+function renderResources() {
+    const resourcesList = document.getElementById('resourcesList');
+    resourcesList.innerHTML = resources.map(resource => {
+        let linkDisplay = '';
+        if (resource.url) {
+            const displayText = resource.urlTitle || 'Open Resource';
+            linkDisplay = `<a href="${resource.url}" target="_blank">${displayText}</a>`;
+        }
+
+        return `
+            <div class="resource ${resource.id === editingResourceId ? 'editing' : ''}">
+                ${resource.id === editingResourceId ? '<div class="editing-badge">Currently Editing</div>' : ''}
+                <div class="resource-header">
+                    <h3>${resource.title}</h3>
+                    <div class="resource-controls">
+                        <button class="control-button" onclick="editResource('${resource.id}')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                            </svg>
+                        </button>
+                        <button class="control-button" onclick="deleteItem('resource', '${resource.id}')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                ${linkDisplay}
+                ${resource.notes ? `<p>${resource.notes}</p>` : ''}
+            </div>
+        `;
+    }).join('');
 }
 
 async function confirmDelete() {
