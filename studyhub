@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Hub</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .subject-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .subject-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .subject-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: #007bff;
+        }
+
+        .subject-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .subject-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .subject-status {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .add-subject {
+            border: 2px dashed #ccc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        .add-subject:hover {
+            border-color: #007bff;
+            color: #007bff;
+        }
+
+        #addSubjectForm {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        input, button {
+            margin: 5px 0;
+            padding: 8px;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .form-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Study Hub</h1>
+    
+    <div class="subject-grid">
+        <!-- Example subject card -->
+        <a href="latin1.html" class="subject-card">
+            <div class="subject-icon">📚</div>
+            <div class="subject-title">Latin</div>
+            <div class="subject-status">Currently studying: Conjugations</div>
+        </a>
+        
+        <!-- Add new subject button -->
+        <div class="subject-card add-subject" onclick="showAddForm()">
+            <div class="subject-icon">➕</div>
+            <div>Add New Subject</div>
+        </div>
+    </div>
+
+    <!-- Add subject form -->
+    <div id="overlay"></div>
+    <div id="addSubjectForm">
+        <h3>Add New Subject</h3>
+        <input type="text" id="subjectName" placeholder="Subject Name" style="width: 100%;">
+        <input type="text" id="subjectEmoji" placeholder="Emoji (e.g., 📚)" style="width: 100%;">
+        <div class="form-buttons">
+            <button onclick="hideAddForm()">Cancel</button>
+            <button onclick="addSubject()">Add</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot, addDoc } 
+            from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    
+        const firebaseConfig = {
+            apiKey: "AIzaSyBOTt7ZC9BB1xr0qgxt2-u6N_A0zrpXtXo",
+            authDomain: "tarot-notes-ce74f.firebaseapp.com",
+            projectId: "tarot-notes-ce74f",
+            storageBucket: "tarot-notes-ce74f.firebasestorage.app",
+            messagingSenderId: "102510585363",
+            appId: "1:102510585363:web:e14dc1bb94284898f181e6",
+            measurementId: "G-L27KGY14ZC"
+        };
+    
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+        window.firestore = { doc, getDoc, setDoc, collection, onSnapshot, addDoc };  // Add addDoc here
+    </script>
+
+    <script>
+        function showAddForm() {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('addSubjectForm').style.display = 'block';
+        }
+
+        function hideAddForm() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('addSubjectForm').style.display = 'none';
+            document.getElementById('subjectName').value = '';
+            document.getElementById('subjectEmoji').value = '';
+        }
+
+        async function addSubject() {
+    const name = document.getElementById('subjectName').value;
+    const emoji = document.getElementById('subjectEmoji').value || '📚';
+    
+    if (!name) return;
+
+    try {
+        const subjectsRef = window.firestore.collection(window.db, 'subjects');
+        const newSubject = {
+            name,
+            emoji,
+            status: 'Getting started',
+            createdAt: new Date()
+        };
+
+        // Create the subject in Firebase using addDoc
+        await window.firestore.addDoc(subjectsRef, newSubject);
+        hideAddForm();
+    } catch (error) {
+        console.error('Error adding subject:', error);
+        alert('Error adding subject. Please try again.');
+    }
+}
+
+        // Listen for subjects and update the grid
+        document.addEventListener('DOMContentLoaded', function() {
+            const subjectsRef = window.firestore.collection(window.db, 'subjects');
+            window.firestore.onSnapshot(subjectsRef, snapshot => {
+                const subjectGrid = document.querySelector('.subject-grid');
+                let subjectsHTML = '';
+
+                snapshot.forEach(doc => {
+                    const subject = doc.data();
+                    subjectsHTML += `
+                        <a href="${subject.name.toLowerCase()}1.html" class="subject-card">
+                            <div class="subject-icon">${subject.emoji}</div>
+                            <div class="subject-title">${subject.name}</div>
+                            <div class="subject-status">Currently studying: ${subject.status}</div>
+                        </a>
+                    `;
+                });
+
+                // Add the "Add New Subject" card
+                subjectsHTML += `
+                    <div class="subject-card add-subject" onclick="showAddForm()">
+                        <div class="subject-icon">➕</div>
+                        <div>Add New Subject</div>
+                    </div>
+                `;
+
+                subjectGrid.innerHTML = subjectsHTML;
+            });
+        });
+    </script>
+</body>
+</html>
