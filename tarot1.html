@@ -232,6 +232,73 @@ h3 {
     right: auto; 
     left: 10px;   
 }
+#markdownHelp table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+
+#markdownHelp code {
+    background: #f0f0f0;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+#markdownHelp h3 {
+    margin-bottom: 15px;
+}
+.note-content {
+    line-height: 1.6;
+}
+
+.note-content h1,
+.note-content h2,
+.note-content h3,
+.note-content h4,
+.note-content h5,
+.note-content h6 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
+.note-content ul,
+.note-content ol {
+    padding-left: 2em;
+    margin: 1em 0;
+}
+
+.note-content code {
+    background: #f0f0f0;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.note-content pre code {
+    display: block;
+    padding: 1em;
+    overflow-x: auto;
+}
+
+.note-content blockquote {
+    border-left: 4px solid #ddd;
+    padding-left: 1em;
+    margin-left: 0;
+    color: #666;
+}
+
+.note-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+.note-content th,
+.note-content td {
+    border: 1px solid #ddd;
+    padding: 0.5em;
+}
+
     </style>
 </head>
 <body>
@@ -257,8 +324,7 @@ h3 {
             <input type="text" id="noteTitle" placeholder="Title" style="width: 100%; margin-bottom: 10px;">
             <textarea id="noteContent" placeholder="Content"></textarea>
             <button onclick="saveNote()">Save</button>
-            <button onclick="cancelAddNote()">Cancel</button>
-        </div>
+            <button onclick="tryToCancelNote()">Cancel</button>        </div>
         <div id="notesList"></div>
     </div>
 
@@ -287,7 +353,7 @@ h3 {
         <button onclick="confirmCancelEdit()">Yes, Discard</button>
         <button onclick="hideEditCancelConfirm()">Keep Editing</button>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         // Global variables
 const statusInput = document.getElementById('currentStatus');
@@ -301,7 +367,15 @@ let statusSaveTimeout = null;
 let editingNoteId = null;
 let editingResourceId = null;
 // Add this with your other global variables
+function showMarkdownHelp() {
+    document.getElementById('overlay').style.display = 'block';
+    document.getElementById('markdownHelp').style.display = 'block';
+}
 
+function hideMarkdownHelp() {
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('markdownHelp').style.display = 'none';
+}
 // Tab functionality
 function showTab(tabName) {
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
@@ -316,6 +390,17 @@ function showAddNoteForm(isEditing = false) {
     form.style.display = 'block';
     const formTitle = form.querySelector('h3');
     formTitle.textContent = isEditing ? 'Edit Note' : 'Add New Note';
+    
+    // Add Markdown help button if it doesn't exist
+    if (!form.querySelector('.markdown-help-btn')) {
+        const textareaContainer = form.querySelector('textarea').parentElement;
+        const helpButton = document.createElement('button');
+        helpButton.textContent = 'Markdown Help';
+        helpButton.className = 'markdown-help-btn';
+        helpButton.onclick = showMarkdownHelp;
+        helpButton.style.marginBottom = '10px';
+        textareaContainer.insertBefore(helpButton, form.querySelector('textarea'));
+    }
 }
 
 function tryToCancelNote() {
@@ -391,30 +476,6 @@ function cancelDelete() {
 }
 
 // Rendering functions
-function renderNotes() {
-    const notesList = document.getElementById('notesList');
-    notesList.innerHTML = notes.map(note => `
-        <div class="note ${note.id === editingNoteId ? 'editing' : ''}">
-            ${note.id === editingNoteId ? '<div class="editing-badge">Currently Editing</div>' : ''}
-            <div class="note-header">
-                <h3>${note.title}</h3>
-                <div class="note-controls">
-                    <button class="control-button" onclick="editNote('${note.id}')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                        </svg>
-                    </button>
-                    <button class="control-button" onclick="deleteItem('note', '${note.id}')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <pre style="white-space: pre-wrap;">${note.content}</pre>
-        </div>
-    `).join('');
-}
 
 
 
@@ -456,6 +517,32 @@ function cancelAddResource() {
     editingResourceId = null;
 }
 
+function renderNotes() {
+    const notesList = document.getElementById('notesList');
+    notesList.innerHTML = notes.map(note => `
+        <div class="note ${note.id === editingNoteId ? 'editing' : ''}">
+            ${note.id === editingNoteId ? '<div class="editing-badge">Currently Editing</div>' : ''}
+            <div class="note-header">
+                <h3>${note.title}</h3>
+                <div class="note-controls">
+                    <button class="control-button" onclick="editNote('${note.id}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                        </svg>
+                    </button>
+                    <button class="control-button" onclick="deleteItem('note', '${note.id}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="note-content">${marked.parse(note.content)}</div>
+        </div>
+    `).join('');
+}
+
+// Add renderResources right after renderNotes
 function renderResources() {
     const resourcesList = document.getElementById('resourcesList');
     resourcesList.innerHTML = resources.map(resource => {
@@ -489,7 +576,6 @@ function renderResources() {
         `;
     }).join('');
 }
-
 
 // Update the initialization listeners
 document.addEventListener('DOMContentLoaded', function() {
@@ -527,9 +613,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Update saveNote function
 async function saveNote() {
+    console.log('Attempting to save note with topic:', TOPIC_ID);
     const { collection, addDoc, doc, deleteDoc } = window.firestore;
     const title = document.getElementById('noteTitle').value;
     const content = document.getElementById('noteContent').value;
+    console.log('Note data:', { title, content });
     if (!title || !content) return;
 
     try {
@@ -645,5 +733,58 @@ statusWarning.addEventListener('click', async () => {
     }
 });
     </script>
+<div id="markdownHelp" class="delete-confirm" style="max-width: 500px;">
+    <h3>Markdown Cheat Sheet</h3>
+    <div style="max-height: 70vh; overflow-y: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td><code># Heading</code></td>
+                <td>For headings (1-6 #'s)</td>
+            </tr>
+            <tr>
+                <td><code>**bold**</code></td>
+                <td>For <strong>bold text</strong></td>
+            </tr>
+            <tr>
+                <td><code>*italic*</code></td>
+                <td>For <em>italic text</em></td>
+            </tr>
+            <tr>
+                <td><code>[link](url)</code></td>
+                <td>For <a href="#">links</a></td>
+            </tr>
+            <tr>
+                <td><code>- item</code></td>
+                <td>For bullet lists</td>
+            </tr>
+            <tr>
+                <td><code>1. item</code></td>
+                <td>For numbered lists</td>
+            </tr>
+            <tr>
+                <td><code>> quote</code></td>
+                <td>For blockquotes</td>
+            </tr>
+            <tr>
+                <td><code>`code`</code></td>
+                <td>For <code>inline code</code></td>
+            </tr>
+            <tr>
+                <td><code>```<br>code block<br>```</code></td>
+                <td>For code blocks</td>
+            </tr>
+            <tr>
+                <td><code>---</code></td>
+                <td>For horizontal lines</td>
+            </tr>
+            <tr>
+                <td><code>[^1]</code> and <code>[^1]: note</code></td>
+                <td>For footnotes. Place [^1] in text and [^1]: note text at bottom</td>
+            </tr>
+        </table>
+    </div>
+    <button onclick="hideMarkdownHelp()" style="margin-top: 15px;">Close</button>
+</div>
 </body>
+
 </html>
