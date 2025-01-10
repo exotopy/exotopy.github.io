@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tarot Study Hub</title>
+    <title>Croatian Study Hub</title>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot } 
@@ -292,7 +292,7 @@ h3 {
         // Global variables
 const statusInput = document.getElementById('currentStatus');
 const statusWarning = document.getElementById('statusWarning');
-const hr = 'tarot';  // Change this for each topic page
+const TOPIC_ID = 'hr';  // Change this for each topic page
 let notes = [];
 let resources = [];
 let currentStatus = '';
