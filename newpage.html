@@ -292,7 +292,7 @@ h3 {
         // Global variables
 const statusInput = document.getElementById('currentStatus');
 const statusWarning = document.getElementById('statusWarning');
-const TOPIC_ID = 'tarot';  // Change this for each topic page
+const TOPIC_ID = 'newpage';  // Change this for each topic page
 let notes = [];
 let resources = [];
 let currentStatus = '';
@@ -305,7 +305,7 @@ let editingResourceId = null;
 // Tab functionality
 function showTab(tabName) {
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+    document.querySelectorAll('.tab-topic_idbutton').forEach(button => button.classList.remove('active'));
     document.getElementById(tabName).classList.add('active');
     document.querySelector(`button[onclick="showTab('${tabName}')"]`).classList.add('active');
 }
@@ -496,7 +496,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const { collection, doc, onSnapshot } = window.firestore;
     
     // Listen for status changes
-    const statusRef = doc(window.db, `status/${TOPIC_ID}/current`);
+    const statusRef = doc(window.db, `status/${newpage}/current`);
     onSnapshot(statusRef, doc => {
         if (doc.exists()) {
             currentStatus = doc.data().status;
@@ -505,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Listen for notes changes
-    const notesRef = collection(window.db, `${TOPIC_ID}_notes`);
+    const notesRef = collection(window.db, `${newpage}_notes`);
     onSnapshot(notesRef, snapshot => {
         notes = [];
         snapshot.forEach(doc => {
@@ -515,7 +515,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Listen for resources changes
-    const resourcesRef = collection(window.db, `${TOPIC_ID}_resources`);
+    const resourcesRef = collection(window.db, `${newpage}_resources`);
     onSnapshot(resourcesRef, snapshot => {
         resources = [];
         snapshot.forEach(doc => {
@@ -533,7 +533,7 @@ async function saveNote() {
     if (!title || !content) return;
 
     try {
-        const notesRef = collection(window.db, `${TOPIC_ID}_notes`);
+        const notesRef = collection(window.db, `${newpage}_notes`);
         await addDoc(notesRef, {
             title,
             content,
@@ -541,7 +541,7 @@ async function saveNote() {
         });
 
         if (editingNoteId) {
-            const oldNoteRef = doc(window.db, `${TOPIC_ID}_notes`, editingNoteId);
+            const oldNoteRef = doc(window.db, `${newpage}_notes`, editingNoteId);
             await deleteDoc(oldNoteRef);
             editingNoteId = null;
         }
@@ -563,7 +563,7 @@ async function saveResource() {
     if (!title) return;
 
     try {
-        const resourcesRef = collection(window.db, `${TOPIC_ID}_resources`);
+        const resourcesRef = collection(window.db, `${newpage}_resources`);
         await addDoc(resourcesRef, {
             title,
             urlTitle,
@@ -573,7 +573,7 @@ async function saveResource() {
         });
 
         if (editingResourceId) {
-            const oldResourceRef = doc(window.db, `${TOPIC_ID}_resources`, editingResourceId);
+            const oldResourceRef = doc(window.db, `${newpage}_resources`, editingResourceId);
             await deleteDoc(oldResourceRef);
             editingResourceId = null;
         }
@@ -592,10 +592,10 @@ async function confirmDelete() {
 
     try {
         if (itemToDelete.type === 'note') {
-            const noteRef = doc(window.db, `${TOPIC_ID}_notes`, itemToDelete.id);
+            const noteRef = doc(window.db, `${newpage}_notes`, itemToDelete.id);
             await deleteDoc(noteRef);
         } else {
-            const resourceRef = doc(window.db, `${TOPIC_ID}_resources`, itemToDelete.id);
+            const resourceRef = doc(window.db, `${newpage}_resources`, itemToDelete.id);
             await deleteDoc(resourceRef);
         }
         cancelDelete();
@@ -617,7 +617,7 @@ statusInput.addEventListener('input', function(e) {
 
     statusSaveTimeout = setTimeout(async () => {
         try {
-            const statusRef = doc(window.db, `status/${TOPIC_ID}/current`);
+            const statusRef = doc(window.db, `status/${newpage}/current`);
             await window.firestore.setDoc(statusRef, {
                 status: currentStatus,
                 updatedAt: new Date()
@@ -633,7 +633,7 @@ statusInput.addEventListener('input', function(e) {
 // Update status warning click handler
 statusWarning.addEventListener('click', async () => {
     try {
-        const statusRef = doc(window.db, `status/${TOPIC_ID}/current`);
+        const statusRef = doc(window.db, `status/${newpage}/current`);
         await window.firestore.setDoc(statusRef, {
             status: currentStatus,
             updatedAt: new Date()
