@@ -496,7 +496,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const { collection, doc, onSnapshot } = window.firestore;
     
     // Listen for status changes
-    const statusRef = doc(window.db, `status/${hr}/current`);
+    const statusRef = doc(window.db, `status/${TOPIC_ID}/current`);
     onSnapshot(statusRef, doc => {
         if (doc.exists()) {
             currentStatus = doc.data().status;
@@ -505,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Listen for notes changes
-    const notesRef = collection(window.db, `${hr}_notes`);
+    const notesRef = collection(window.db, `${TOPIC_ID}_notes`);
     onSnapshot(notesRef, snapshot => {
         notes = [];
         snapshot.forEach(doc => {
@@ -515,7 +515,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Listen for resources changes
-    const resourcesRef = collection(window.db, `${hr}_resources`);
+    const resourcesRef = collection(window.db, `${TOPIC_ID}_resources`);
     onSnapshot(resourcesRef, snapshot => {
         resources = [];
         snapshot.forEach(doc => {
@@ -533,7 +533,7 @@ async function saveNote() {
     if (!title || !content) return;
 
     try {
-        const notesRef = collection(window.db, `${hr}_notes`);
+        const notesRef = collection(window.db, `${TOPIC_ID}_notes`);
         await addDoc(notesRef, {
             title,
             content,
@@ -541,7 +541,7 @@ async function saveNote() {
         });
 
         if (editingNoteId) {
-            const oldNoteRef = doc(window.db, `${hr}_notes`, editingNoteId);
+            const oldNoteRef = doc(window.db, `${TOPIC_ID}_notes`, editingNoteId);
             await deleteDoc(oldNoteRef);
             editingNoteId = null;
         }
@@ -563,7 +563,7 @@ async function saveResource() {
     if (!title) return;
 
     try {
-        const resourcesRef = collection(window.db, `${hr}_resources`);
+        const resourcesRef = collection(window.db, `${TOPIC_ID}_resources`);
         await addDoc(resourcesRef, {
             title,
             urlTitle,
@@ -573,7 +573,7 @@ async function saveResource() {
         });
 
         if (editingResourceId) {
-            const oldResourceRef = doc(window.db, `${hr}_resources`, editingResourceId);
+            const oldResourceRef = doc(window.db, `${TOPIC_ID}_resources`, editingResourceId);
             await deleteDoc(oldResourceRef);
             editingResourceId = null;
         }
@@ -592,10 +592,10 @@ async function confirmDelete() {
 
     try {
         if (itemToDelete.type === 'note') {
-            const noteRef = doc(window.db, `${hr}_notes`, itemToDelete.id);
+            const noteRef = doc(window.db, `${TOPIC_ID}_notes`, itemToDelete.id);
             await deleteDoc(noteRef);
         } else {
-            const resourceRef = doc(window.db, `${hr}_resources`, itemToDelete.id);
+            const resourceRef = doc(window.db, `${TOPIC_ID}_resources`, itemToDelete.id);
             await deleteDoc(resourceRef);
         }
         cancelDelete();
@@ -617,7 +617,7 @@ statusInput.addEventListener('input', function(e) {
 
     statusSaveTimeout = setTimeout(async () => {
         try {
-            const statusRef = doc(window.db, `status/${hr}/current`);
+            const statusRef = doc(window.db, `status/${TOPIC_ID}/current`);
             await window.firestore.setDoc(statusRef, {
                 status: currentStatus,
                 updatedAt: new Date()
@@ -633,7 +633,7 @@ statusInput.addEventListener('input', function(e) {
 // Update status warning click handler
 statusWarning.addEventListener('click', async () => {
     try {
-        const statusRef = doc(window.db, `status/${hr}/current`);
+        const statusRef = doc(window.db, `status/${TOPIC_ID}/current`);
         await window.firestore.setDoc(statusRef, {
             status: currentStatus,
             updatedAt: new Date()
