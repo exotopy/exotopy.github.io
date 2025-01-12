@@ -496,7 +496,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const { collection, doc, onSnapshot } = window.firestore;
     
     // Listen for status changes
-    const statusRef = doc(window.db, `status/${TOPIC_ID}/current`);
+    const statusRef = doc(window.db, `${TOPIC_ID}_status/current`);
     onSnapshot(statusRef, doc => {
         if (doc.exists()) {
             currentStatus = doc.data().status;
@@ -617,7 +617,7 @@ statusInput.addEventListener('input', function(e) {
 
     statusSaveTimeout = setTimeout(async () => {
         try {
-            const statusRef = doc(window.db, `status/${TOPIC_ID}/current`);
+            const statusRef = doc(window.db, `${TOPIC_ID}_status/current`);
             await window.firestore.setDoc(statusRef, {
                 status: currentStatus,
                 updatedAt: new Date()
@@ -633,7 +633,7 @@ statusInput.addEventListener('input', function(e) {
 // Update status warning click handler
 statusWarning.addEventListener('click', async () => {
     try {
-        const statusRef = doc(window.db, `status/${TOPIC_ID}/current`);
+        const statusRef = doc(window.db, `${TOPIC_ID}_status/current`);
         await window.firestore.setDoc(statusRef, {
             status: currentStatus,
             updatedAt: new Date()
