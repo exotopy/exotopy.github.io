@@ -344,7 +344,20 @@ line.selected {
             <textarea class="swords"></textarea>
             <label>Cups</label>
             <textarea class="cups"></textarea>
-            </div>
+        </div>
+        <div id="elements" style="display: none;">
+            <label>Fire</label>
+            <textarea class="fire"></textarea>
+            <label>Water</label>
+            <textarea class="water"></textarea>
+            <label>Earth</label>
+            <textarea class="earth"></textarea>
+            <label>Air</label>
+            <textarea class="air"></textarea>
+        </div>
+        <button id="toggleElements" style="margin-top: 10px; padding: 5px 10px; border-radius: 5px; border: 1px solid #ddd; background: white; cursor: pointer;">
+            Elements
+        </button>
         </div>
     </div>
     <script>
@@ -607,6 +620,7 @@ document.querySelectorAll('.path-label').forEach(el => {
     swords: document.querySelector('#sephirahAdditionalNotes textarea.swords').value,
     cups: document.querySelector('#sephirahAdditionalNotes textarea.cups').value,
     lastModified: new Date()
+    
 };
 
         // Preserve existing images
@@ -1002,6 +1016,53 @@ document.querySelector('#sephirahInputs .image-control-btn.move-right').addEvent
         document.addEventListener('DOMContentLoaded', () => {
             createTree();
             setupAutoSave();
+            
+            // Add elements toggle functionality
+            const toggleButton = document.getElementById('toggleElements');
+            const elementsDiv = document.getElementById('elements');
+            
+            // Load elements data when toggling
+            toggleButton.addEventListener('click', async () => {
+                const isHidden = elementsDiv.style.display === 'none';
+                elementsDiv.style.display = isHidden ? 'block' : 'none';
+                toggleButton.textContent = isHidden ? 'Elements (hide)' : 'Elements';
+                
+                if (isHidden) {
+                    try {
+                        const docRef = window.firestore.doc(window.db, 'elements', 'global');
+                        const docSnap = await window.firestore.getDoc(docRef);
+                        
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            document.querySelector('#elements textarea.fire').value = data.fire || '';
+                            document.querySelector('#elements textarea.water').value = data.water || '';
+                            document.querySelector('#elements textarea.earth').value = data.earth || '';
+                            document.querySelector('#elements textarea.air').value = data.air || '';
+                        }
+                    } catch (error) {
+                        console.error('Error loading elements data:', error);
+                    }
+                }
+            });
+            
+            // Add auto-save for elements
+            const elementTextareas = document.querySelectorAll('#elements textarea');
+            elementTextareas.forEach(textarea => {
+                textarea.addEventListener('input', async () => {
+                    try {
+                        const docRef = window.firestore.doc(window.db, 'elements', 'global');
+                        await window.firestore.setDoc(docRef, {
+                            fire: document.querySelector('#elements textarea.fire').value,
+                            water: document.querySelector('#elements textarea.water').value,
+                            earth: document.querySelector('#elements textarea.earth').value,
+                            air: document.querySelector('#elements textarea.air').value,
+                            lastModified: new Date()
+                        }, { merge: true });
+                    } catch (error) {
+                        console.error('Error saving elements data:', error);
+                    }
+                });
+            });
         });
 
         // Clear selection when clicking background
