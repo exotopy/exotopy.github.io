@@ -23,6 +23,51 @@
         const db = getFirestore(app);
         window.db = db;
         window.firestore = { doc, getDoc, setDoc, updateDoc, collection, deleteDoc, addDoc, onSnapshot };
+        const auth = getAuth();
+
+    document.getElementById('menuButton').addEventListener('click', () => {
+        const menu = document.getElementById('menu');
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    document.getElementById('loginButton').addEventListener('click', () => {
+        document.getElementById('loginModal').style.display = 'block';
+    });
+    
+    document.getElementById('closeModal').addEventListener('click', () => {
+        document.getElementById('loginModal').style.display = 'none';
+    });
+    
+    document.getElementById('submitLogin').addEventListener('click', () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                alert('Login successful!');
+                document.getElementById('loginModal').style.display = 'none';
+            })
+            .catch((error) => {
+                alert('Login failed: ' + error.message);
+            });
+    });
+    document.getElementById('logoutButton').addEventListener('click', () => {
+        signOut(auth).then(() => {
+            alert('Logged out successfully!');
+        }).catch((error) => {
+            alert('Logout failed: ' + error.message);
+        });
+    });
+    
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById('loginButton').style.display = 'none';
+            document.getElementById('logoutButton').style.display = 'block';
+        } else {
+            document.getElementById('loginButton').style.display = 'block';
+            document.getElementById('logoutButton').style.display = 'none';
+        }
+    });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
