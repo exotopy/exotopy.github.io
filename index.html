@@ -23,7 +23,7 @@
         window.db = db;
         window.firestore = { doc, getDoc, setDoc, updateDoc, collection };
 
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
     
     const auth = getAuth();
 
@@ -52,6 +52,23 @@
             .catch((error) => {
                 alert('Login failed: ' + error.message);
             });
+    });
+    document.getElementById('logoutButton').addEventListener('click', () => {
+        signOut(auth).then(() => {
+            alert('Logged out successfully!');
+        }).catch((error) => {
+            alert('Logout failed: ' + error.message);
+        });
+    });
+    
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById('loginButton').style.display = 'none';
+            document.getElementById('logoutButton').style.display = 'block';
+        } else {
+            document.getElementById('loginButton').style.display = 'block';
+            document.getElementById('logoutButton').style.display = 'none';
+        }
     });
     </script>
 
@@ -376,7 +393,10 @@ line.selected {
                         </button>
                     </a>
                     <button id="loginButton" style="position: fixed; top: 120px; right: 20px; padding: 10px 20px; border-radius: 5px; border: 1px solid #ddd; background: white; cursor: pointer;">Log In</button>
+                    <button id="logoutButton" style="position: fixed; top: 120px; right: 20px; padding: 10px 20px; border-radius: 5px; border: 1px solid #ddd; background: white; cursor: pointer;">Log Out</button>
+
                         </div>
+                        
             </div>
             
             <div id="loginModal" class="hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); display: none; z-index: 1001;"> 
