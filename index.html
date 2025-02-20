@@ -387,7 +387,7 @@ line.selected {
                 <input type="text" placeholder="Title/Name">
                 <label>attributes</label>
                 <textarea class="sephirahAttribute"></textarea>
-                
+               
             </div>
         </div>
 
@@ -413,9 +413,9 @@ line.selected {
             <label>Cups</label>
             <textarea class="cups"></textarea>
             <label>Wands</label>
-<textarea class="wands"></textarea>
-<label>Pentacles</label>
-<textarea class="pentacles"></textarea>
+            <textarea class="wands"></textarea>
+            <label>Pentacles</label>
+            <textarea class="pentacles"></textarea>
         </div>
         <div id="elements" style="display: none;">
             <label>Fire</label>
@@ -653,8 +653,8 @@ document.querySelectorAll('.path-label').forEach(el => {
             // Load the new fields
             document.querySelector('#sephirahInputs input[placeholder="Title/Name"]').value = data.title || '';
             document.querySelector('#sephirahInputs textarea.sephirahAttribute').value = data.sephirahAttribute || '';
-            document.querySelector('#sephirahInputs textarea.wands').value = data.wands || '';
-            document.querySelector('#sephirahInputs textarea.pentacles').value = data.pentacles || '';
+            document.querySelector('#sephirahAdditionalNotes textarea.wands').value = data.wands || '';
+            document.querySelector('#sephirahAdditionalNotes textarea.pentacles').value = data.pentacles || '';
             document.querySelector('#sephirahAdditionalNotes textarea.swords').value = data.swords || '';
             document.querySelector('#sephirahAdditionalNotes textarea.cups').value = data.cups || '';
         } else {
@@ -662,8 +662,8 @@ document.querySelectorAll('.path-label').forEach(el => {
             document.getElementById('sephirahImageDisplay').style.display = 'none';
             document.querySelector('#sephirahInputs input[placeholder="Title/Name"]').value = '';
             document.querySelector('#sephirahInputs textarea.sephirahAttribute').value = '';
-            document.querySelector('#sephirahInputs textarea.wands').value = '';
-            document.querySelector('#sephirahInputs textarea.pentacles').value = '';
+            document.querySelector('#sephirahAdditionalNotes textarea.wands').value = '';
+            document.querySelector('#sephirahAdditionalNotes textarea.pentacles').value = '';
             document.querySelector('#sephirahAdditionalNotes textarea.swords').value = '';
             document.querySelector('#sephirahAdditionalNotes textarea.cups').value = '';
         }
@@ -682,8 +682,8 @@ document.querySelectorAll('.path-label').forEach(el => {
         const newData = {
     title: document.querySelector('#sephirahInputs input[placeholder="Title/Name"]').value,
     sephirahAttribute: document.querySelector('#sephirahInputs textarea.sephirahAttribute').value,
-    wands: document.querySelector('#sephirahInputs textarea.wands').value,
-    pentacles: document.querySelector('#sephirahInputs textarea.pentacles').value,
+    wands: document.querySelector('#sephirahAdditionalNotes textarea.wands').value,
+    pentacles: document.querySelector('#sephirahAdditionalNotes textarea.pentacles').value,
     swords: document.querySelector('#sephirahAdditionalNotes textarea.swords').value,
     cups: document.querySelector('#sephirahAdditionalNotes textarea.cups').value,
     lastModified: new Date()
