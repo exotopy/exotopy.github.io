@@ -5,27 +5,28 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc } 
-            from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDoc, setDoc, updateDoc } 
+    from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } 
+    from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBOTt7ZC9BB1xr0qgxt2-u6N_A0zrpXtXo",
-            authDomain: "tarot-notes-ce74f.firebaseapp.com",
-            projectId: "tarot-notes-ce74f",
-            storageBucket: "tarot-notes-ce74f.firebasestorage.app",
-            messagingSenderId: "102510585363",
-            appId: "1:102510585363:web:e14dc1bb94284898f181e6",
-            measurementId: "G-L27KGY14ZC"
-        };
+    const firebaseConfig = {
+    apiKey: "AIzaSyBOTt7ZC9BB1xr0qgxt2-u6N_A0zrpXtXo",
+    authDomain: "tarot-notes-ce74f.firebaseapp.com",
+    projectId: "tarot-notes-ce74f",
+    storageBucket: "tarot-notes-ce74f.firebasestorage.app",
+    messagingSenderId: "102510585363",
+    appId: "1:102510585363:web:e14dc1bb94284898f181e6",
+    measurementId: "G-L27KGY14ZC"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        window.db = db;
-        window.firestore = { doc, getDoc, setDoc, updateDoc, collection };
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth();
+window.db = db;
+window.firestore = { doc, getDoc, setDoc, updateDoc, collection };
 
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-    
-    const auth = getAuth();
+
 
     document.getElementById('menuButton').addEventListener('click', () => {
         const menu = document.getElementById('menu');
@@ -320,6 +321,14 @@ line.selected {
         <button id="toggleElements" style="position: fixed; bottom: 20px; left: 270px; padding: 10px 20px; border-radius: 5px; border: 1px solid #ddd; background: white; cursor: pointer;">
             Elements
         </button>
+        <div id="loginModal" class="hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); display: none; z-index: 1001;"> 
+            <h3>Login</h3>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button id="submitLogin">Submit</button>
+            <button id="closeModal">Close</button>
+        </div>
+        
                 </div>
                 
     </div>
@@ -376,21 +385,9 @@ line.selected {
                     </div>
                 </div>
                 <input type="text" placeholder="Title/Name">
-                <input type="text" placeholder="Hebrew Name">
-                                </div>
-
-                <div id="sephirahAdditionalNotes" class="hidden">
-
-                <label>Wands</label>
-<textarea class="wands"></textarea>
-<label>Pentacles</label>
-<textarea class="pentacles"></textarea>
-            </div>
-            <div id="elements-left" style="display: none;">
-                <label>Fire</label>
-                <textarea class="fire"></textarea>
-                <label>Water</label>
-                <textarea class="water"></textarea>
+                <label>attributes</label>
+                <textarea class="sephirahAttribute"></textarea>
+                
             </div>
         </div>
 
@@ -406,23 +403,6 @@ line.selected {
 
         <!-- Right Panel -->
         <div class="panel" id="rightPanel">
-           
-            
-            <div id="loginModal" class="hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); display: none; z-index: 1001;"> 
-                <h3>Login</h3>
-                <input type="email" id="email" placeholder="Email" required>
-                <input type="password" id="password" placeholder="Password" required>
-                <button id="submitLogin">Submit</button>
-                <button id="closeModal">Close</button>
-            </div>
-            
-            <div id="loginModal" class="hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); display: none; z-index: 1001;"> 
-                <h3>Login</h3>
-    <input type="email" id="email" placeholder="Email" required>
-    <input type="password" id="password" placeholder="Password" required>
-    <button id="submitLogin">Submit</button>
-    <button id="closeModal">Close</button>
-</div>
             <div id="pathNotes" class="hidden">
                 <label>Notes</label>
                 <textarea placeholder="Enter notes..."></textarea>
@@ -432,13 +412,20 @@ line.selected {
             <textarea class="swords"></textarea>
             <label>Cups</label>
             <textarea class="cups"></textarea>
+            <label>Wands</label>
+<textarea class="wands"></textarea>
+<label>Pentacles</label>
+<textarea class="pentacles"></textarea>
         </div>
-<div id="elements-right" style="display: none;">
-    <label>Earth</label>
-    <textarea class="earth"></textarea>
-    <label>Air</label>
-    <textarea class="air"></textarea>
-
+        <div id="elements" style="display: none;">
+            <label>Fire</label>
+            <textarea class="fire"></textarea>
+            <label>Water</label>
+            <textarea class="water"></textarea>
+            <label>Earth</label>
+            <textarea class="earth"></textarea>
+            <label>Air</label>
+            <textarea class="air"></textarea>
     </div>
     <script>
         let currentSephirah = null;
@@ -525,53 +512,8 @@ line.selected {
                 container.appendChild(group);
             });
         }
-        document.getElementById('toggleTree').addEventListener('click', () => {
-        const tree = document.getElementById('treeContainer');
-        if (tree) {
-            tree.style.display = tree.style.display === 'none' ? 'block' : 'none';
-        }
-    });
-    
-    // Toggle Notes Visibility
-    document.getElementById('toggleNotes').addEventListener('click', () => {
-        const notes = document.querySelectorAll('#pathNotes, #sephirahAdditionalNotes');
-        notes.forEach(note => {
-            note.style.display = note.style.display === 'none' ? 'block' : 'none';
-        });
-    });
-// Clear selection when clicking background
-document.querySelector('.container').addEventListener('click', (e) => {
-    if (e.target.className === 'container' || e.target.className === 'panel') {
-        // Remove selected class from all sephirot
-        document.querySelectorAll('.sephirah').forEach(el => {
-            el.classList.remove('selected');
-        });
-        
-        // Remove selected class from all paths
-        document.querySelectorAll('line').forEach(el => {
-            el.classList.remove('selected');
-        });
-        document.querySelectorAll('.path-label').forEach(el => {
-            el.classList.remove('selected');
-        });
 
-        document.getElementById('title').textContent = '';
-        document.getElementById('pathInputs').classList.add('hidden');
-        document.getElementById('pathNotes').classList.add('hidden');
-        document.getElementById('sephirahInputs').classList.add('hidden');
-        document.getElementById('sephirahAdditionalNotes').classList.add('hidden');
-        document.getElementById('elements-left').style.display = 'none';
-        document.getElementById('elements-right').style.display = 'none';
-        document.getElementById('toggleElements').textContent = 'Elements';
-        currentPath = null;
-        currentSephirah = null;
-    }
-});
         async function selectPath(path) {
-    // Hide elements when selecting a path
-document.getElementById('elements-left').style.display = 'none';
-document.getElementById('elements-right').style.display = 'none';
-document.getElementById('toggleElements').textContent = 'Elements';
     // Remove selected class from all sephirot
     document.querySelectorAll('.sephirah').forEach(el => {
         el.classList.remove('selected');
@@ -654,14 +596,10 @@ document.getElementById('toggleElements').textContent = 'Elements';
 }
 
 async function selectSephirah(key) {
-document.getElementById('elements-left').style.display = 'none';
-document.getElementById('elements-right').style.display = 'none';
-document.getElementById('toggleElements').textContent = 'Elements';
-    
     // Remove selected class from all paths
-    document.querySelectorAll('line').forEach(el => {
-        el.classList.remove('selected');
-    });
+document.querySelectorAll('line').forEach(el => {
+    el.classList.remove('selected');
+});
 document.querySelectorAll('.path-label').forEach(el => {
     el.classList.remove('selected');
 });
@@ -714,7 +652,7 @@ document.querySelectorAll('.path-label').forEach(el => {
 
             // Load the new fields
             document.querySelector('#sephirahInputs input[placeholder="Title/Name"]').value = data.title || '';
-            document.querySelector('#sephirahInputs input[placeholder="Hebrew Name"]').value = data.hebrewName || '';
+            document.querySelector('#sephirahInputs textarea.sephirahAttribute').value = data.sephirahAttribute || '';
             document.querySelector('#sephirahInputs textarea.wands').value = data.wands || '';
             document.querySelector('#sephirahInputs textarea.pentacles').value = data.pentacles || '';
             document.querySelector('#sephirahAdditionalNotes textarea.swords').value = data.swords || '';
@@ -723,7 +661,7 @@ document.querySelectorAll('.path-label').forEach(el => {
             // Clear all fields if no data exists
             document.getElementById('sephirahImageDisplay').style.display = 'none';
             document.querySelector('#sephirahInputs input[placeholder="Title/Name"]').value = '';
-            document.querySelector('#sephirahInputs input[placeholder="Hebrew Name"]').value = '';
+            document.querySelector('#sephirahInputs textarea.sephirahAttribute').value = '';
             document.querySelector('#sephirahInputs textarea.wands').value = '';
             document.querySelector('#sephirahInputs textarea.pentacles').value = '';
             document.querySelector('#sephirahAdditionalNotes textarea.swords').value = '';
@@ -743,7 +681,7 @@ document.querySelectorAll('.path-label').forEach(el => {
         
         const newData = {
     title: document.querySelector('#sephirahInputs input[placeholder="Title/Name"]').value,
-    hebrewName: document.querySelector('#sephirahInputs input[placeholder="Hebrew Name"]').value,
+    sephirahAttribute: document.querySelector('#sephirahInputs textarea.sephirahAttribute').value,
     wands: document.querySelector('#sephirahInputs textarea.wands').value,
     pentacles: document.querySelector('#sephirahInputs textarea.pentacles').value,
     swords: document.querySelector('#sephirahAdditionalNotes textarea.swords').value,
@@ -1142,27 +1080,80 @@ document.querySelector('#sephirahInputs .image-control-btn.move-right').addEvent
     moveImage(1, false);
 });
         // Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    createTree();
-    setupAutoSave();
+        document.addEventListener('DOMContentLoaded', () => {
+            createTree();
+            setupAutoSave();
+            
+            // Add elements toggle functionality
+            const toggleButton = document.getElementById('toggleElements');
+            const elementsDiv = document.getElementById('elements');
+            
+            // Load elements data when toggling
+            toggleButton.addEventListener('click', async () => {
+                const isHidden = elementsDiv.style.display === 'none';
+                elementsDiv.style.display = isHidden ? 'block' : 'none';
+                toggleButton.textContent = isHidden ? 'Elements (hide)' : 'Elements';
+                
+                if (isHidden) {
+                    try {
+                        const docRef = window.firestore.doc(window.db, 'elements', 'global');
+                        const docSnap = await window.firestore.getDoc(docRef);
+                        
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            document.querySelector('#elements textarea.fire').value = data.fire || '';
+                            document.querySelector('#elements textarea.water').value = data.water || '';
+                            document.querySelector('#elements textarea.earth').value = data.earth || '';
+                            document.querySelector('#elements textarea.air').value = data.air || '';
+                        }
+                    } catch (error) {
+                        console.error('Error loading elements data:', error);
+                    }
+                }
+            });
+            
+            // Add auto-save for elements
+            const elementTextareas = document.querySelectorAll('#elements textarea');
+            elementTextareas.forEach(textarea => {
+                textarea.addEventListener('input', async () => {
+                    try {
+                        const docRef = window.firestore.doc(window.db, 'elements', 'global');
+                        await window.firestore.setDoc(docRef, {
+                            fire: document.querySelector('#elements textarea.fire').value,
+                            water: document.querySelector('#elements textarea.water').value,
+                            earth: document.querySelector('#elements textarea.earth').value,
+                            air: document.querySelector('#elements textarea.air').value,
+                            lastModified: new Date()
+                        }, { merge: true });
+                    } catch (error) {
+                        console.error('Error saving elements data:', error);
+                    }
+                });
+            });
+        });
+        document.getElementById('toggleTree').addEventListener('click', () => {
+        const tree = document.getElementById('treeContainer');
+        if (tree) {
+            tree.style.display = tree.style.display === 'none' ? 'block' : 'none';
+        }
+    });
     
-    // Add elements toggle functionality
-const toggleButton = document.getElementById('toggleElements');
-const elementsLeftDiv = document.getElementById('elements-left');
-const elementsRightDiv = document.getElementById('elements-right');
-
-toggleButton.addEventListener('click', async () => {
-    const isHidden = elementsLeftDiv.style.display === 'none';
-    elementsLeftDiv.style.display = isHidden ? 'block' : 'none';
-    elementsRightDiv.style.display = isHidden ? 'block' : 'none';
-    toggleButton.textContent = isHidden ? 'Elements (hide)' : 'Elements';
-    
-    // Clear selections when showing elements
-    if (isHidden) {
-        // Clear all selections
+    // Toggle Notes Visibility
+    document.getElementById('toggleNotes').addEventListener('click', () => {
+        const notes = document.querySelectorAll('#pathNotes, #sephirahAdditionalNotes');
+        notes.forEach(note => {
+            note.style.display = note.style.display === 'none' ? 'block' : 'none';
+        });
+    });
+// Clear selection when clicking background
+document.querySelector('.container').addEventListener('click', (e) => {
+    if (e.target.className === 'container' || e.target.className === 'panel') {
+        // Remove selected class from all sephirot
         document.querySelectorAll('.sephirah').forEach(el => {
             el.classList.remove('selected');
         });
+        
+        // Remove selected class from all paths
         document.querySelectorAll('line').forEach(el => {
             el.classList.remove('selected');
         });
@@ -1170,52 +1161,42 @@ toggleButton.addEventListener('click', async () => {
             el.classList.remove('selected');
         });
 
-        // Hide all panels
         document.getElementById('title').textContent = '';
         document.getElementById('pathInputs').classList.add('hidden');
         document.getElementById('pathNotes').classList.add('hidden');
         document.getElementById('sephirahInputs').classList.add('hidden');
         document.getElementById('sephirahAdditionalNotes').classList.add('hidden');
-        
+        document.getElementById('elements-left').style.display = 'none';
+        document.getElementById('elements-right').style.display = 'none';
+        document.getElementById('toggleElements').textContent = 'Elements';
         currentPath = null;
         currentSephirah = null;
-
-        // Load elements data
-        try {
-            const docRef = window.firestore.doc(window.db, 'elements', 'global');
-            const docSnap = await window.firestore.getDoc(docRef);
-            
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                document.querySelector('#elements-left textarea.fire').value = data.fire || '';
-                document.querySelector('#elements-left textarea.water').value = data.water || '';
-                document.querySelector('#elements-right textarea.earth').value = data.earth || '';
-                document.querySelector('#elements-right textarea.air').value = data.air || '';
-            }
-        } catch (error) {
-            console.error('Error loading elements data:', error);
-        }
     }
 });
+        // Clear selection when clicking background
+        document.querySelector('.container').addEventListener('click', (e) => {
+    if (e.target.className === 'container' || e.target.className === 'panel') {
+        // Remove selected class from all sephirot
+        document.querySelectorAll('.sephirah').forEach(el => {
+            el.classList.remove('selected');
+        });
+        
+        // Remove selected class from all paths
+        document.querySelectorAll('line').forEach(el => {
+            el.classList.remove('selected');
+        });
+        document.querySelectorAll('.path-label').forEach(el => {
+            el.classList.remove('selected');
+        });
 
-// Add auto-save for elements
-const elementTextareas = document.querySelectorAll('#elements-left textarea, #elements-right textarea');
-elementTextareas.forEach(textarea => {
-    textarea.addEventListener('input', async () => {
-        try {
-            const docRef = window.firestore.doc(window.db, 'elements', 'global');
-            await window.firestore.setDoc(docRef, {
-                fire: document.querySelector('#elements-left textarea.fire').value,
-                water: document.querySelector('#elements-left textarea.water').value,
-                earth: document.querySelector('#elements-right textarea.earth').value,
-                air: document.querySelector('#elements-right textarea.air').value,
-                lastModified: new Date()
-            }, { merge: true });
-        } catch (error) {
-            console.error('Error saving elements data:', error);
-        }
-    });
-});
+        document.getElementById('title').textContent = '';
+        document.getElementById('pathInputs').classList.add('hidden');
+        document.getElementById('pathNotes').classList.add('hidden');
+        document.getElementById('sephirahInputs').classList.add('hidden');
+        document.getElementById('sephirahAdditionalNotes').classList.add('hidden');
+        currentPath = null;
+        currentSephirah = null;
+    }
 });
 
         // Auto-save setup
