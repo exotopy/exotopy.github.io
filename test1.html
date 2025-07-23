@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Art Portfolio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: white;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 300;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .gallery-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .gallery-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .gallery-card h2 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+
+        .gallery-card p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .gallery-link {
+            display: inline-block;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            padding: 0.8rem 2rem;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .gallery-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .about-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        .about-section h2 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        .about-section p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Your Art Portfolio</h1>
+            <p class="subtitle">Welcome to my creative world</p>
+        </header>
+
+        <div class="gallery-grid">
+            <div class="gallery-card" onclick="window.location.href='paintings.html'">
+                <h2>Paintings</h2>
+                <p>Explore my collection of oil paintings, watercolors, and mixed media artwork.</p>
+                <a href="paintings.html" class="gallery-link">View Gallery</a>
+            </div>
+
+            <div class="gallery-card" onclick="window.location.href='drawings.html'">
+                <h2>Drawings</h2>
+                <p>Pencil sketches, charcoal drawings, and digital illustrations.</p>
+                <a href="drawings.html" class="gallery-link">View Gallery</a>
+            </div>
+
+            <div class="gallery-card" onclick="window.location.href='sculptures.html'">
+                <h2>Sculptures</h2>
+                <p>Three-dimensional artworks in clay, metal, and mixed materials.</p>
+                <a href="sculptures.html" class="gallery-link">View Gallery</a>
+            </div>
+
+            <div class="gallery-card" onclick="window.location.href='photography.html'">
+                <h2>Photography</h2>
+                <p>Capturing moments and emotions through the lens.</p>
+                <a href="photography.html" class="gallery-link">View Gallery</a>
+            </div>
+        </div>
+
+        <div class="about-section">
+            <h2>About the Artist</h2>
+            <p>Welcome to my artistic journey. Here you'll find a collection of my works spanning various mediums and styles. Each piece tells a story, captures an emotion, or explores a concept that resonates with me. Feel free to browse through the different galleries and discover the world as I see it through my art.</p>
+        </div>
+    </div>
+</body>
+</html>
